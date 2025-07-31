@@ -1,0 +1,10 @@
+{
+  "scale": 10,
+  "border": 1,
+  "light": "lightblue",
+  "dark": "steelblue",
+  "quiet_zone": "red",
+  "data_dark": "green",
+  "data_light": "yellow",
+  "lower": ""
+}

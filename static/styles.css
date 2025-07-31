@@ -1,0 +1,170 @@
+/* Just a copy from w3schools.com */
+
+a:link {
+  color: darkblue;
+}
+
+a:visited {
+  text-shadow: -10px 0 white, 0 10px white, 10px 0 white, 0 -10px white;
+  color: darkblue;
+}
+
+a:hover {
+  color: darkblue;
+}
+
+a:active {
+  color: darkblue;
+}
+
+#headerlink {
+  color: white;
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 14px;
+}
+
+h2 {
+  color: black;
+  font-size: 28px;
+}
+
+#default {
+  font-family: Arial, Helvetica, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 14px;
+}
+
+#debug {
+  font-family: Courier;
+  border-collapse: collapse;
+  color: grey;
+  font-weight: bold;
+  width: 100%;
+  font-size: 14px;
+}
+
+#default td, #default th {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+#default tr:nth-child(even){background-color: #f2f2f2;}
+
+#default tr:hover {background-color: #ddd;}
+
+#default th {
+  padding-top: 5px;
+  padding-bottom: 5px;
+  text-align: left;
+  background-color: darkblue;
+  color: white;
+}
+
+/* CELL COLORS SHAMELESSLY COPIED FROM https://www.astrouxds.com/patterns/status-system/ */
+
+#cell_critical {
+  background-color: #FF3838;
+}
+
+#cell_serious {
+  background-color: #FFB302;
+}
+
+#cell_caution {
+  background-color: #FCE83A;
+}
+
+#cell_normal {
+  background-color: #56F000;
+}
+
+#cell_enabled {
+  background-color: #2DCCFF;
+}
+
+#cell_disabled {
+  background-color: #A4ABB6;
+}
+
+/* CELL COLORS SHAMELESSLY COPIED FROM https://www.astrouxds.com/patterns/status-system/ */
+
+hr {
+  border: 2px solid black;
+}
+
+/* Style the tab */
+.tab {
+  overflow: hidden;
+  border: 1px solid #ccc;
+  background-color: #f1f1f1;
+}
+
+/* Style the buttons that are used to open the tab content */
+.tab button {
+  background-color: inherit;
+  float: left;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 14px 16px;
+  transition: 0.3s;
+}
+
+/* Change background color of buttons on hover */
+.tab button:hover {
+  background-color: #ddd;
+}
+
+/* Create an active/current tablink class */
+.tab button.active {
+  background-color: #ccc;
+}
+
+/* Style the tab content */
+.tabcontent {
+  display: none;
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  border-top: none;
+} 
+
+input[type=text], select {
+  /*width: 30%;*/
+  padding: 2px 2px;
+  margin: 2px 0px;
+  display: inline-block;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+input[type=submit] {
+  width: 100%;
+  background-color: darkblue;
+  color: white;
+  padding: 2px 2px;
+  margin: 2px 0px 
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+input[type=submit]:hover {
+  background-color: #FF3838;
+}
+
+.menu {
+  float: left;
+  width: 10%;
+  text-align: left;
+}
+
+.content {
+  float: left;
+  width: 90%;
+  text-align: left;
+}

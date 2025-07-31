@@ -1,0 +1,9 @@
+{
+  "scale": 10, 
+  "border": 1, 
+  "light": "white", 
+  "dark": "black", 
+  "quiet_zone": "white", 
+  "data_dark": "black", 
+  "data_light": "black"
+}

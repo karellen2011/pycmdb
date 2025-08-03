@@ -7,6 +7,8 @@ from cmdbdb import cmdb_connect, cmdb_disconnect
 def adminlistcolumns2(im_dict):
     output = html_header()
 
+    df_table = list_tables()
+
     # JavaScript
     output += '<!-- https://www.w3schools.com/howto/howto_js_cascading_dropdown.asp -->\n'
     output += '<script>\n'
@@ -22,7 +24,7 @@ def adminlistcolumns2(im_dict):
     output += '}\n'
     output += '}\n'
     output += 'window.onload = function() {\n'
-    output += 'var subjectSel = document.getElementById("subject");\n'
+    output += 'var subjectSel = document.getElementById("table");\n'
     output += 'var topicSel = document.getElementById("topic");\n'
     output += 'var chapterSel = document.getElementById("chapter");\n'
     output += 'for (var x in subjectObject) {\n'
@@ -81,41 +83,26 @@ def adminlistcolumns2(im_dict):
     return output
 
 
-def list_table_column():
-    tc_query = """
+def list_tables():
+    query = """
 SELECT
-  pg_catalog.pg_tables.tablename AS table,
-  information_schema.columns.column_name AS column,
-  information_schema.columns.data_type AS data_type,
-  information_schema.columns.character_maximum_length AS character_maximum_length,
-  information_schema.columns.column_default AS column_default
+  _sys_display_value.uuid AS uuid,
+  pg_catalog.pg_tables.tablename AS tablename,
+  _sys_display_value.display_value AS display_value,
+  _sys_display_value.sys_order AS display_order
 FROM pg_catalog.pg_tables
-JOIN information_schema.columns ON pg_catalog.pg_tables.tablename = information_schema.columns.table_name
-WHERE pg_catalog.pg_tables.tableowner = 'cmdb'
-  AND pg_catalog.pg_tables.tablename NOT LIKE '_sys_%'
-ORDER BY pg_catalog.pg_tables.tablename, information_schema.columns.ordinal_position
+JOIN _sys_display_value ON pg_catalog.pg_tables.tablename = _sys_display_value.sys_table
+WHERE tableowner = 'cmdb'
+  AND tablename NOT LIKE '_sys_%'
+  AND sys_table = tablename
+  AND sys_table_column = ''
+ORDER BY display_order, display_value
 ;
     """
-    dv_query = """
-SELECT sys_table, sys_table_column, display_value, sys_order FROM _sys_display_value;
-    """
     conn = cmdb_connect()
-    df_tc = pd.read_sql(text(tc_query), conn)
-    df_dv = pd.read_sql(text(dv_query), conn)
+    df = pd.read_sql(text(query), conn)
     cmdb_disconnect(conn)
-    #df_tc.to_csv('df_tc.csv', index=False)
-    #df_dv.to_csv('df_dv.csv', index=False)
-    df_tc['table_display_value'] = ''
-    df_tc['column_display_value'] = ''
-    df_tc['column_display_order'] = ''
-    for i in df_dv[df_dv['sys_table_column'] == ''][['sys_table', 'display_value']].iterrows():
-        df_tc.loc[(df_tc['table'] == i[1]['sys_table']), 'table_display_value'] = i[1]['display_value']
-    for i in df_dv[df_dv['sys_table_column'].notna()][['sys_table', 'sys_table_column', 'display_value', 'sys_order']].iterrows():
-        df_tc.loc[(df_tc['table'] == i[1]['sys_table']) & (df_tc['column'] == i[1]['sys_table_column']), 'column_display_value'] = i[1]['display_value']
-        df_tc.loc[(df_tc['table'] == i[1]['sys_table']) & (df_tc['column'] == i[1]['sys_table_column']), 'column_display_order'] = i[1]['sys_order']
-    #df_tc.to_csv('df_tc2.csv', index=False)
-    df_tc = df_tc.sort_values(by=['table', 'column_display_order', 'column'])
-    return df_tc
+    return df
 
 
 

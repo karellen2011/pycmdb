@@ -6,7 +6,7 @@ import pandas as pd
 import cmdbhtml
 import cmdbdb
 
-def tablelist(table, row_start, number_rows, filter_col, filter_val, insert_data):
+def tablelist(table, row_start, number_rows, filter_col, filter_con, filter_val, insert_data):
 
     # INSERT DATA BEFORE DOING ANYTHING ELSE
     if len(insert_data.keys()) > 0 and 'insert' in insert_data.keys() and insert_data['insert'] == 'insert':
@@ -38,6 +38,7 @@ def tablelist(table, row_start, number_rows, filter_col, filter_val, insert_data
     output = cmdbhtml.html_header()
 
     #output += str(filter_col) + '<br>\n'
+    #output += str(filter_con) + '<br>\n'
     #output += str(filter_val) + '<br>\n'
     
     #output += str(insert_data) + '<br>\n'
@@ -80,9 +81,11 @@ def tablelist(table, row_start, number_rows, filter_col, filter_val, insert_data
             #
             filter_list = []
             filter_value = ''
+            filter_condition = ''
             if column in filter_col:
                 filter_col_index = filter_col.index(column)
                 filter_value = filter_val[filter_col_index]
+                filter_condition = filter_con[filter_col_index]
                 #if filter_value != '':
                 #    output += str(filter_value) + '</br>\n'
             if internal_data_type == 'direct' and column != table:
@@ -102,12 +105,27 @@ def tablelist(table, row_start, number_rows, filter_col, filter_val, insert_data
                 filter_list.insert(0, '-- None --')
             filter_list.insert(0, '')
             if len(filter_list) > 1:
-                output += '<br><select name="' + str(column) + '" onchange="this.form.submit()">\n'
-                for item in filter_list:
-                    if str(item) == filter_value:
-                        output += '<option value="' + str(item) + '" selected>' + str(item) + '</option>\n'
+                output += '<br>'
+                output += '<select name="' + str(column) + '::condition">\n'
+                for filter_condition_value in ['', '==', '!=']:
+                    if filter_condition_value == filter_condition:
+                        output += '<option value="' + str(filter_condition_value) + '" selected>' + str(filter_condition_value) + '</option>\n'
                     else:
-                        output += '<option value="' + str(item) + '">' + str(item) + '</option>\n'
+                        output += '<option value="' + str(filter_condition_value) + '">' + str(filter_condition_value) + '</option>\n'
+                output += '</select>\n<br>\n'
+                output += '<select name="' + str(column) + '" onchange="this.form.submit()">\n'
+                if column_data_type == 'date':
+                    for item in filter_list:
+                        if str(item) == filter_value:
+                            output += '<option value="' + str(item) + '" selected>' + str(item)[:11] + '</option>\n'
+                        else:
+                            output += '<option value="' + str(item) + '">' + str(item)[:11] + '</option>\n'
+                else:
+                    for item in filter_list:
+                        if str(item) == filter_value:
+                            output += '<option value="' + str(item) + '" selected>' + str(item) + '</option>\n'
+                        else:
+                            output += '<option value="' + str(item) + '">' + str(item) + '</option>\n'
                 output += '</select>\n'
             output += '</th>'
 
@@ -212,6 +230,7 @@ def tablelist(table, row_start, number_rows, filter_col, filter_val, insert_data
     for cc, fc in enumerate(filter_col):
         new_fc = ''
         fv = filter_val[cc]
+        filter_condition = filter_con[cc]
         if fv != '':
             filter_include = df_display_value[df_display_value['sys_table_column'] == fc]['include'].iloc[0]
             filter_dictionary = df_display_value[df_display_value['sys_table_column'] == fc]['dictionary'].iloc[0]
@@ -226,32 +245,62 @@ def tablelist(table, row_start, number_rows, filter_col, filter_val, insert_data
                 if data_type == 'boolean':
                     if fv == 'True':
                         #output += '<tr><th>direct ' + data_type + ' ' + new_fc + ' ' + fv + '</th></tr>\n'
-                        df_table = df_table[df_table[new_fc] == True].copy()
+                        #df_table = df_table[df_table[new_fc] == True].copy()
+                        if filter_condition == '==':
+                            df_table = df_table[df_table[new_fc] == True].copy()
+                        elif filter_condition == '!=':
+                            df_table = df_table[df_table[new_fc] != True].copy()
                     elif fv == 'False':
-                        df_table = df_table[df_table[new_fc] == False].copy()
+                        #df_table = df_table[df_table[new_fc] == False].copy()
+                        if filter_condition == '==':
+                            df_table = df_table[df_table[new_fc] == False].copy()
+                        elif filter_condition == '!=':
+                            df_table = df_table[df_table[new_fc] != False].copy()
                 elif data_type == 'integer':
-                    df_table = df_table[df_table[new_fc] == int(fv)].copy()
+                    #df_table = df_table[df_table[new_fc] == int(fv)].copy()
+                    if filter_condition == '==':
+                        df_table = df_table[df_table[new_fc] == int(fv)].copy()
+                    elif filter_condition == '!=':
+                        df_table = df_table[df_table[new_fc] != int(fv)].copy()
                 elif data_type == 'numeric':
-                    df_table = df_table[df_table[new_fc] == float(fv)].copy()
+                    #df_table = df_table[df_table[new_fc] == float(fv)].copy()
+                    if filter_condition == '==':
+                        df_table = df_table[df_table[new_fc] == float(fv)].copy()
+                    elif filter_condition == '!=':
+                        df_table = df_table[df_table[new_fc] != float(fv)].copy()
                 else:
                    #output += '<tr><th>direct ' + data_type + ' ' + new_fc + ' ' + fv + '</th></tr>\n'
-                   df_table = df_table[df_table[new_fc] == fv].copy()
+                   #df_table = df_table[df_table[new_fc] == fv].copy()
+                    if filter_condition == '==':
+                        df_table = df_table[df_table[new_fc] == fv].copy()
+                    elif filter_condition == '!=':
+                        df_table = df_table[df_table[new_fc] != fv].copy()
             # DICTIONARY FILTER
             if filter_dictionary == True and filter_reference == False and filter_function == False:
                 new_fc = fc + '_display_value'
                 #output += '<tr><th>dict ' + new_fc + ' ' + fv + '</th></tr>\n'
-                df_table = df_table[df_table[new_fc] == fv].copy()
+                if filter_condition == '==':
+                    df_table = df_table[df_table[new_fc] == fv].copy()
+                elif filter_condition == '!=':
+                    df_table = df_table[df_table[new_fc] != fv].copy()
             # REFERENCE FILTER
             if  filter_include == False and filter_dictionary == False and filter_reference == True and filter_function == False:
                 new_fc = fc + '_name'
                 #output += '<tr><th>refe ' + new_fc + ' ' + fv + '</th></tr>\n'
-                df_table = df_table[df_table[new_fc] == fv].copy()
+                if filter_condition == '==':
+                    df_table = df_table[df_table[new_fc] == fv].copy()
+                elif filter_condition == '!=':
+                    df_table = df_table[df_table[new_fc] != fv].copy()
             # INCLUDED REFERENCE FILTER
             # ERROR IN get_display_value, included reference appears as false
             if  filter_include == True and filter_dictionary == False and filter_reference == False and filter_function == False:
                 new_fc = fc
                 #output += '<tr><th>inc refe ' + new_fc + ' ' + fv + '</th></tr>\n'
-                df_table = df_table[df_table[new_fc] == fv].copy()
+                if filter_condition == '==':
+                    df_table = df_table[df_table[new_fc] == fv].copy()
+                elif filter_condition == '!=':
+                    df_table = df_table[df_table[new_fc] != fv].copy()
+    
 
     #
     # ASSEMBLE TABLE START
@@ -279,12 +328,22 @@ def tablelist(table, row_start, number_rows, filter_col, filter_val, insert_data
                     internal_data_type = 'unknown'
                 # OUTPUT DIRECT VALUE
                 if internal_data_type == 'direct':
-                    output += '<td>'
+                    #output += '<td>'
                     if column == 'name':
-                        output += '<a href="/view/' + str(table) + '/' + str(row[1]['uuid']) + '/">' + str(row[1][column]) + '</a>'
+                        output += '<td><a href="/view/' + str(table) + '/' + str(row[1]['uuid']) + '/">' + str(row[1][column]) + '</a></td>'
                     else:
-                        output += str(row[1][column])
-                    output += '</td>'
+                        if column_data_type == 'date':
+                            output += '<td>' + str(row[1][column])[:11] + '</td>'
+                        elif column_data_type == 'numeric':
+                            scale = int(df_display_value[(df_display_value['sys_table'] == table) & (df_display_value['sys_table_column'] == column)]['scale'].iloc[0])
+                            tmp_split = str(row[1][column])[:11].split('.')
+                            add_scale = (scale - len(tmp_split[1])) * '0'
+                            output += '<td align="right">' + str(row[1][column])[:11] + str(add_scale) + '</td>'
+                        elif column_data_type == 'integer':
+                            output += '<td align="right">' + str(row[1][column])[:11] + '</td>'
+                        else:
+                            output += '<td>' + str(row[1][column]) + '</td>'
+                    #output += '</td>'
                 # OUTPUT DICTIONARY
                 if internal_data_type == 'dictionary':
                     if str(row[1][column + '_display_color']) != '':

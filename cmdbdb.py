@@ -62,7 +62,8 @@ SELECT
   CASE
     WHEN cte_function.function_name IS NOT NULL THEN True
     ELSE False
-  END AS function
+  END AS function,
+  information_schema.columns.numeric_scale AS scale
 FROM _sys_display_value
 JOIN information_schema.columns ON sys_table_column = information_schema.columns.column_name
 LEFT JOIN cte_dictionary ON _sys_display_value.sys_table_column = cte_dictionary.sys_table_column
@@ -114,7 +115,8 @@ SELECT
   CASE
     WHEN cte_function.function_name IS NOT NULL THEN True
     ELSE False
-  END AS function
+  END AS function,
+  information_schema.columns.numeric_scale AS scale
 FROM _sys_display_value
 JOIN information_schema.columns ON sys_table_column = information_schema.columns.column_name
 LEFT JOIN cte_dictionary ON _sys_display_value.sys_table_column = cte_dictionary.sys_table_column
@@ -264,6 +266,11 @@ def get_table(table):
     conn = cmdb_connect()
     df = pd.read_sql(text(query), conn)
     cmdb_disconnect(conn)
+    # UPDATE DATE COLUMNS:
+    for i in df_display_value[df_display_value['data_type'] == 'date'].iterrows():
+        date_col = i[1]['sys_table_column']
+        #print(date_col)
+        df[date_col] = pd.to_datetime(df[date_col], format='%Y-%m-%d')
     return df
 
 ################################################################################

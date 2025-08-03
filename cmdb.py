@@ -211,15 +211,19 @@ def table_list_new(table_name):
     row_start = 0
     number_rows = 50
     filter_col = []
+    filter_con = []
     filter_val = []
     insert_data = {}
+    output = ''
     #output = tablelist(table_name, row_start, number_rows, filter_col, filter_val, insert_data)
     if request.method == 'GET':
         for i in request.args:
             if str(i) != 'row_start' and str(i) != 'number_rows':
-                filter_col.append(str(i))
-                #filter_val.append(str(request.args[i]))
-                filter_val.append(request.args[i])
+                if str(i)[-11:] == '::condition':
+                    filter_con.append(request.args[i])
+                else:
+                    filter_col.append(str(i))
+                    filter_val.append(request.args[i])
             elif str(i) == 'row_start':
                 row_start = request.args[i]
             elif str(i) == 'number_rows':
@@ -229,8 +233,15 @@ def table_list_new(table_name):
         if 'insert' in im_dict.keys():
             for key in im_dict.keys():
                 insert_data[key] = im_dict[key]
-
-    output = tablelist(table_name, row_start, number_rows, filter_col, filter_val, insert_data)
+    for cc, ff in enumerate(filter_col):
+        if filter_con[cc] == '' and filter_val[cc] != '':
+            filter_con[cc] = '=='
+        if filter_con[cc] != '' and filter_val[cc] == '':
+            filter_con[cc] = ''
+    #output += str(filter_col) + '<br>\n'
+    #output += str(filter_con) + '<br>\n'
+    #output += str(filter_val) + '<br>\n'
+    output += tablelist(table_name, row_start, number_rows, filter_col, filter_con, filter_val, insert_data)
     return output
 
 

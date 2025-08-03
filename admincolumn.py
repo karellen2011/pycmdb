@@ -199,6 +199,7 @@ VALUES ('""" + str(display_value) + """', '""" + str(table_name) + """', '""" + 
 
     # INTEGER
     if type_name == 'integer':
+        # ADD ZERO AS DEFAULT!
         query = """
 ALTER TABLE """ + str(table_name) + """
 ADD COLUMN """ + str(column_name) + """

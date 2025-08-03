@@ -213,12 +213,6 @@ def cmdbview(table, uuid, data):
             output += '</tr>\n'
         output += '</table>\n'
 
-    output += '<div class="tab">\n'
-    output += '<button class="tablinks" onclick="openTab(event, \'Select\')">Select</button>\n'
-    output += '</div>\n'
-    output += '<div id="Select" class="tabcontent">\n'
-    output += '<p id="debug">' + str(query).replace('\n', '<br>\n') + '</p>\n'
-    output += '</div>\n'
     output += html_footer()
     return output
 

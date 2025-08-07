@@ -7,7 +7,6 @@ from cmdbhtml import html_header, html_footer
 
 from admintable import adminlisttables
 from admincolumn import adminlistcolumns
-from admincolumn2 import adminlistcolumns2
 from admindictionary import adminlistdict
 from adminfunction import adminlistfunctions
 from adminreport import createreport
@@ -21,23 +20,9 @@ app = Flask(__name__)
 #
 
 @app.route("/")
-def hello_world():
+def hello_cmdb():
     output = html_header()
     output += html_footer()
-    return output
-
-#
-# CASCADE TEST
-#
-
-@app.route('/cascade/', methods = ['POST', 'GET'])
-def cascade():
-    im_dict = None
-    if request.method == 'POST':
-        im_dict = request.form
-
-    output = adminlistcolumns2(im_dict)
-
     return output
 
 ################################################################################
@@ -89,35 +74,17 @@ def admintable():
 @app.route("/admin/column/", methods = ['POST', 'GET'])
 def admincolumn():
 
+    output = ''
     im_dict = None
-    table = '-- None --'
-    column = ''
-    display_value = ''
-    display_order = ''
-    data_type = '-- None --'
-    length = ''
-    column_default = ''
-    update_data = {}
+    form_data = {}
     if request.method == 'POST':
         im_dict = request.form
-        if 'table' in im_dict.keys():
-            table = str(im_dict['table']).lower()
-        if 'create_column' in im_dict.keys():
-            table = str(im_dict['table']).lower()
-            column = str(im_dict['column']).lower()
-            display_value = str(im_dict['display_value'])
-            display_order = str(im_dict['display_order'])
-            data_type = str(im_dict['data_type']).lower()
-            length = str(im_dict['length']).lower()
-            column_default = str(im_dict['column_default']).lower()
-        if 'delete_column' in im_dict.keys():
-            table = im_dict['delete_column'].split('::')[0]
-            column = im_dict['delete_column'].split('::')[1]
-        if 'update_column' in im_dict.keys():
-            for key in im_dict.keys():
-                update_data[key] = im_dict[key]
+        for key in im_dict.keys():
+            form_data[key] = im_dict[key]
 
-    output = adminlistcolumns(table, column, display_value, display_order, data_type, length, column_default, update_data)
+    output += adminlistcolumns(form_data)
+
+    #output = adminlistcolumns(table, column, display_value, display_order, data_type, length, column_default, update_data)
     return output
 
 ################################################################################
@@ -202,7 +169,7 @@ def adminreport():
 
 ################################################################################
 #
-# LIST TABLE2
+# LIST TABLE
 #
 ################################################################################
 
@@ -242,38 +209,6 @@ def table_list_new(table_name):
     #output += str(filter_con) + '<br>\n'
     #output += str(filter_val) + '<br>\n'
     output += tablelist(table_name, row_start, number_rows, filter_col, filter_con, filter_val, insert_data)
-    return output
-
-
-@app.route("/table333/list/<string:table_name>/", methods = ['POST', 'GET'])
-def table_list(table_name):
-
-    row_start = 0
-    number_rows = 50
-    filter_col = []
-    filter_val = []
-    insert_data = {}
-    if request.method == 'GET':
-        for i in request.args:
-            if str(i) != 'row_start' and str(i) != 'number_rows':
-                filter_col.append(str(i))
-                #filter_val.append(str(request.args[i]))
-                filter_val.append(request.args[i])
-            elif str(i) == 'row_start':
-                row_start = request.args[i]
-            elif str(i) == 'number_rows':
-                number_rows = request.args[i]
-    if request.method == 'POST':
-        im_dict = request.form
-        if 'insert' in im_dict.keys():
-            for key in im_dict.keys():
-                insert_data[key] = im_dict[key]
-    
-    output = tablelist(table_name, row_start, number_rows, filter_col, filter_val, insert_data)
-    #output = ''
-    #output += str(filter_col) + '<br>\n'
-    #output += str(filter_val) + '<br>\n'
-    #output += str(insert_data) + '<br>\n'
     return output
 
 ################################################################################

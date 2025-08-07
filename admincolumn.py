@@ -2,154 +2,228 @@ from sqlalchemy import create_engine, text
 import pandas as pd
 
 from cmdbhtml import html_header, html_footer
-from cmdbdb import cmdb_connect, cmdb_disconnect
+#from cmdbdb import cmdb_connect, cmdbdb.cmdb_disconnect
+from adminfunction import get_functions
+import cmdbdb
 
-def adminlistcolumns(table, column, display_value, display_order, data_type, length, column_default, update_data):
+def adminlistcolumns(form_data):
 
-    # CREATE A NEW COLUMN (ACTUALLY DO IT)
-    query = ''
-    if table != '-- None --' and column != '' and data_type != '-- None --':
-        query = create_column(table, column, display_value, display_order, data_type, length, column_default)
+    update_key = ''
+    update_data = {}
+    update_query = ''
 
-    # DELETE A COLUMN
-    if table != '-- None --' and column != '' and data_type == '-- None --':
-        query = delete_column(table, column)
+    if 'action' in form_data.keys() and form_data['action'] == 'insert':
+        create_column(form_data)
+    if 'drop_column' in form_data.keys():
+        table = form_data['drop_column'].split('::')[0]
+        column = form_data['drop_column'].split('::')[1]
+        delete_column(table, column)
+    if 'update_column' in form_data.keys():
+        update_key = '::' + str(form_data['update_column'])
+        for key in form_data.keys():
+            if key[len(key)-len(update_key):] == update_key:
+                update_data[key[:-len(update_key)]] = form_data[key]
+        if update_data != {}:
+            table = form_data['table']
+            column = update_key.split('::')[2]
+            update_query = update_column(table, column, update_data)
 
-    # UPDATE COLUMNS (ALL :/)
-    if len(update_data.keys()) > 0:
-        query = update_column(update_data)
 
-    # LOAD DATA
-    df_tc = list_table_column()
-    df_tc['character_maximum_length'].fillna('0', inplace=True)
-    df_tc['character_maximum_length'] = df_tc['character_maximum_length'].astype(int)
-    df_tc['column_display_order'] = df_tc['column_display_order'].astype(int)
-    tl = list(df_tc['table'].unique())
-    if table != '-- None --' and table != '-- none --':
-        df_tc = df_tc[df_tc['table'] == table]
-    #pd.options.display.float_format = '{:,.0f}'.format
+
+    data_tmp = {'sys_table': [''], 'display_value': ['']}
+    df_tmp = pd.DataFrame(data_tmp)
+    df_tmp_tablelist = cmdbdb.get_tablelist()
+    df_tablelist = pd.concat([df_tmp, df_tmp_tablelist])
+    table = ''
+    if 'table' in form_data.keys():
+        table = form_data['table']
+
+    data_type = ''
+    if 'data_type' in form_data.keys():
+        data_type = form_data['data_type']
 
     output = html_header()
-    #output += query + '<br>\n'
-    #output += str(im_dict) + '<br>\n'
+    #output += str(update_key) + '<br>\n'
+    #output += str(update_data) + '<br>\n'
+    #output += str(update_query) + '<br>\n'
+    #output += '<br>\n'
+    #output += str(form_data) + '<br>\n'
     #output += str(table) + '<br>\n'
-    #output += str(data_type) + '<br>\n'
-    #output += str(update_data.keys()) + '<br>\n'
-
-
-
     output += '<form action="/admin/column/" method="POST">\n'
     output += '<table id="default">\n'
-    output += '<tr><th>Table</th><th>Column</th><th>Display Value</th><th>Order</th><th>Data Type</th><th>Length</th><th>Default</th><th></th></tr>\n'
+    output += '<tr><th>Table</th><th>Data Type</th><th>Length</th><th>Default</th><th>Column</th><th>Display Value</th><th>Display Order</th><th>Include</th><th>Hide</th><th></th></tr>'
 
-    # CREATE A NEW COLUMN
-    output += '<tr>\n'
+    # LIST TABLES
+    output += '<tr>'
     output += '<td><select name="table" onchange="this.form.submit()">\n'
-    output += '<option value="-- None --">-- None --</option>\n'
-    #tmp = ''
-    for t in tl:
-        if str(t) == table:
-            #t_dv = str(df_tc[df_tc['table'] == t]['table_display_value'].unique()[0])
-            output += '<option value="' + str(t) + '" selected>' + str(t) + '</option>\n'
+    for i in df_tablelist.iterrows():
+        if table ==  i[1]['sys_table']:
+            output += '<option value="' + i[1]['sys_table'] + '" selected>' + i[1]['display_value'] + '</option>\n'
         else:
-            #t_dv = str(df_tc[df_tc['table'] == t]['table_display_value'].unique()[0])
-            output += '<option value="' + str(t) + '">' + str(t) + '</option>\n'
-    output += '</select></td>\n'
-    #output += tmp
-    output += '<td><input type="text" name="column"></td>\n'
-    output += '<td><input type="text" name="display_value"></td>\n'
-    output += '<td><input type="text" name="display_order"></td>\n'
-    output += '<td><select name="data_type">\n'
-    output += '<option value="-- None --">-- None --</option>\n'
-    output += '<option value="reference">Reference</option>\n'
-    output += '<option value="dictionary">Dictionary</option>\n'
-    output += '<option value="function">Function</option>\n'
-    output += '<option value="boolean">Boolean</option>\n'
-    output += '<option value="integer">Integer</option>\n'
-    output += '<option value="float">Float</option>\n'
-    output += '<option value="character varying">Character Varying</option>\n'
-    output += '<option value="date">Date</option>\n'
-    output += '</select></td>\n'
-    #if data_type == 'float':
-    #    output += '<td><input type="text" name="length" value="8,2"></td>\n'
-    #elif data_type == 'character varying':
-    #    output += '<td><input type="text" name="length" value="32"></td>\n'
-    #else:
-    #    output += '<td><input type="text" name="length"></td>\n'
-    output += '<td><input type="text" name="length"></td>\n'
-    output += '<td><input type="text" name="column_default"></td>\n'
-    output += '<td><button type="submit" name="create_column" value=""><img src="/static/create.png" alt="Create" width="20"></button></td>'
-    output += '</tr>\n'
+            output += '<option value="' + i[1]['sys_table'] + '">' + i[1]['display_value'] + '</option>\n'
+    output += '</select>\n'
+    output += '</td>'
 
-    # LIST ALL TABLES AND COLUMNS
-    for i in df_tc.iterrows():
-        output += '<tr>'
-        output += '<td>' + str(i[1]['table']) + '</td>'
-        output += '<td>' + str(i[1]['column']) + '</td>'
-        if str(i[1]['column']) == 'uuid' or str(i[1]['column']) == 'name' or str(i[1]['column']) == 'active':
-            output += '<td>' + str(i[1]['column_display_value']) + '</td>'
+    # LIST COLUMN
+    if table != '':
+        data_type_dict = {'': '', 'reference': 'Reference', 'dictionary': 'Dictionary', 'function': 'Function', 'boolean': 'Boolean', 'integer': 'Integer', 'float': 'Float', 'character varying': 'Character Varying', 'date': 'Date'}
+        output += '<td><select name="data_type" onchange="this.form.submit()">\n'
+        for key in data_type_dict:
+            if data_type == key:
+                output += '<option value="' + str(key) + '" selected>' + str(data_type_dict[key]) + '</option>\n'
+            else:
+                output += '<option value="' + str(key) + '">' + str(data_type_dict[key]) + '</option>\n'
+        output += '</select></td>\n'
+        if data_type != '':
+            if data_type == 'reference':
+                df_ref = cmdbdb.get_tablelist()
+                output += '<td></td><td></td>\n'
+                output += '<td><select name="column">\n'
+                for ref in df_ref.iterrows():
+                    if table != ref[1]['sys_table']:
+                        output += '<option value="' + ref[1]['sys_table'] + '">' + ref[1]['display_value'] + '</option>\n'
+                output += '</select></td>\n'
+            elif data_type == 'dictionary':
+                output += '<td></td><td></td>\n'
+                output += '<td><input type="text" name="column"></td>\n'
+            elif data_type == 'function':
+                output += '<td></td><td></td>\n'
+                df_fun = get_functions()
+                output += '<td><select name="column">\n'
+                for fun in df_fun.iterrows():
+                    output += '<option value="' + fun[1]['Name'] + '">' + fun[1]['Name'] + '</option>\n'
+                output += '</select></td>\n'
+            elif data_type == 'boolean':
+                output += '<td></td>\n'
+                output += '<td><select name="column_default">\n'
+                output += '<option value=""></option>\n'
+                output += '<option value="true">True</option>\n'
+                output += '<option value="false">False</option>\n'
+                output += '</select></td>\n'
+                output += '<td>'
+                output += '<input type="text" name="column">'
+                output += '</td>\n'
+            elif data_type == 'character varying':
+                output += '<td>\n'
+                output += '<input type="text" name="length" value="256">\n'
+                output += '</td>'
+                output += '<td>\n'
+                output += '<input type="text" name="column_default">'
+                output += '</td>'
+                output += '<td>'
+                output += '<input type="text" name="column">'
+                output += '</td>\n'
+            elif data_type == 'integer':
+                output += '<td>\n'
+                #output += '<input type="text" name="length" value="256">\n'
+                output += '</td>'
+                output += '<td>\n'
+                output += '<input type="text" name="column_default" value="0">'
+                output += '</td>'
+                output += '<td>'
+                output += '<input type="text" name="column">'
+                output += '</td>\n'
+            elif data_type == 'float':
+                output += '<td>\n'
+                output += '<input type="text" name="length" value="8,2">\n'
+                output += '</td>'
+                output += '<td>\n'
+                output += '<input type="text" name="column_default" value="0.0">'
+                output += '</td>'
+                output += '<td>'
+                output += '<input type="text" name="column">'
+                output += '</td>\n'
+            elif data_type == 'date':
+                output += '<td>\n'
+                #output += '<input type="text" name="length" value="8,2">\n'
+                output += '</td>'
+                output += '<td>\n'
+                output += '<input type="text" name="column_default" value="1970-01-01">'
+                output += '</td>'
+                output += '<td>'
+                output += '<input type="text" name="column">'
+                output += '</td>\n'
+            output += '<td>'
+            output += '<input type="text" name="column_display_value">'
+            output += '</td>\n'
+            output += '<td>'
+            output += '<input type="text" name="sys_order">'
+            output += '</td>\n'
+            output += '<td>'
+            output += '<select name="include">\n'
+            output += '<option value="true">True</option>\n'
+            output += '<option value="false" selected>False</option>\n'
+            output += '</select></td>\n'
+            output += '<td>'
+            output += '<select name="hide">\n'
+            output += '<option value="true">True</option>\n'
+            output += '<option value="false" selected>False</option>\n'
+            output += '</select></td>\n'
+            output += '<td><button type="submit" name="action" value="insert"><img src="/static/create.png" alt="Insert" width="20"></button></td>\n'
         else:
-            output += '<td><input type="text" name="display_value::' + str(i[1]['table']) + '::' + str(i[1]['column']) + '" value="' + str(i[1]['column_display_value']) + '"></td>'
-        output += '<td><input type="text" name="display_order::' + str(i[1]['table']) + '::' + str(i[1]['column']) + '" value="' + str(i[1]['column_display_order']) + '"></td>'
-        output += '<td>' + str(i[1]['data_type']) + '</td>'
-        output += '<td>' + str(i[1]['character_maximum_length']) + '</td>'
-        output += '<td>' + str(i[1]['column_default']) + '</td>'
+            output += '<td></td><td></td><td></td><td></td><td></td><td></td><td></td>'
+    else:
+        output += '<td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>'
+    output += '</tr>'
 
-        if str(i[1]['column']) == 'uuid' or str(i[1]['column']) == 'name' or str(i[1]['column']) == 'active':
-            output += '<td><button type="submit" name="update_column" value="' + str(i[1]['table']) + '::' + str(i[1]['column']) + '"><img src="/static/update.png" alt="Update" width="20"></button></td>'
-        else:
-            output += '<td><button type="submit" name="update_column" value="' + str(i[1]['table']) + '::' + str(i[1]['column']) + '"><img src="/static/update.png" alt="Update" width="20"></button><button type="submit" name="delete_column" value="' + str(i[1]['table']) + '::' + str(i[1]['column']) + '"><img src="/static/delete.png" alt="Delete" width="20"></button></td>'
-        output += '</tr>\n'
+    # LIST TABLE STRUCTURE
+    if table != '':
+        df_table_structure = cmdbdb.get_table_structure(table)
+        for row in df_table_structure.iterrows():
+            output += '<tr>'
+            #for col in df_table_structure.columns:
+            #    output += '<td>' + str(row[1][col]) + '</td>\n'
+            output += '<td>' + str(row[1]['table']) + '</td>\n'
+            output += '<td>' + str(row[1]['data_type']) + '</td>\n'
+            output += '<td>' + str(row[1]['character_maximum_length']) + '</td>\n'
+            output += '<td>' + str(row[1]['column_default']) + '</td>\n'
+            output += '<td>' + str(row[1]['column']) + '</td>\n'
+            if row[1]['column'] == 'uuid':
+                output += '<td>' + str(row[1]['display_value']) + '</td>\n'
+            else:
+                output += '<td><input type="text" name="display_value::' + str(table) + '::' + str(row[1]['column']) + '" value="' + str(row[1]['display_value']) + '"></td>\n'
+            output += '<td><input type="text" name="sys_order::' + str(table) + '::' + str(row[1]['column']) + '" value="' + str(row[1]['sys_order']) + '"></td>\n'
+            output += '<td><select name="include::' + str(table) + '::' + str(row[1]['column']) + '">\n'
+            for boolean in ['True', 'False']:
+                if str(row[1]['include']) == boolean:
+                    output += '<option value="' + boolean.lower() + '" selected>' + boolean + '</option>\n'
+                else:
+                    output += '<option value="' + boolean.lower() + '">' + boolean + '</option>\n'
+            output += '</select></td>\n'
+            output += '<td><select name="hide::' + str(table) + '::' + str(row[1]['column']) + '">\n'
+            for boolean in ['True', 'False']:
+                if str(row[1]['hide']) == boolean:
+                    output += '<option value="' + boolean.lower() + '" selected>' + boolean + '</option>\n'
+                else:
+                    output += '<option value="' + boolean.lower() + '">' + boolean + '</option>\n'
+            output += '</select></td>\n'
+            output += '<td>'
+            output += '<button type="submit" name="update_column" value="' + str(table) + '::' + str(row[1]['column']) + '"><img src="/static/update.png" alt="Update" width="20"></button>'
+            if str(row[1]['column']) != 'uuid' and str(row[1]['column']) != 'name' and str(row[1]['column']) != 'active':
+                output += '<button type="submit" name="drop_column" value="' + str(table) + '::' + str(row[1]['column']) + '"><img src="/static/delete.png" alt="Drop" width="20"></button>'
+            output += '</td>'
+            output += '</tr>\n'
+
     output += '</table>\n'
-    output += '</form>\n'
-    # SQL DEBUG
-    output += '<div class="tab">\n'
-    output += '<button class="tablinks" onclick="openTab(event, \'SQL\')">SQL</button>\n'
-    output += '</div>\n'
-    output += '<div id="SQL" class="tabcontent">\n'
-    output += '<p id="debug">' + str(query) + '</p>\n'
-    output += '</div>\n'
+    output += '<form>\n'
     output += html_footer()
     return output
 
-def list_table_column():
-    tc_query = """
-SELECT
-  pg_catalog.pg_tables.tablename AS table,
-  information_schema.columns.column_name AS column,
-  information_schema.columns.data_type AS data_type,
-  information_schema.columns.character_maximum_length AS character_maximum_length,
-  information_schema.columns.column_default AS column_default
-FROM pg_catalog.pg_tables
-JOIN information_schema.columns ON pg_catalog.pg_tables.tablename = information_schema.columns.table_name
-WHERE pg_catalog.pg_tables.tableowner = 'cmdb'
-  AND pg_catalog.pg_tables.tablename NOT LIKE '_sys_%'
-ORDER BY pg_catalog.pg_tables.tablename, information_schema.columns.ordinal_position
-;
-    """
-    dv_query = """
-SELECT sys_table, sys_table_column, display_value, sys_order FROM _sys_display_value;
-    """
-    conn = cmdb_connect()
-    df_tc = pd.read_sql(text(tc_query), conn)
-    df_dv = pd.read_sql(text(dv_query), conn)
-    cmdb_disconnect(conn)
-    #df_tc.to_csv('df_tc.csv', index=False)
-    #df_dv.to_csv('df_dv.csv', index=False)
-    df_tc['table_display_value'] = ''
-    df_tc['column_display_value'] = ''
-    df_tc['column_display_order'] = ''
-    for i in df_dv[df_dv['sys_table_column'] == ''][['sys_table', 'display_value']].iterrows():
-        df_tc.loc[(df_tc['table'] == i[1]['sys_table']), 'table_display_value'] = i[1]['display_value']
-    for i in df_dv[df_dv['sys_table_column'].notna()][['sys_table', 'sys_table_column', 'display_value', 'sys_order']].iterrows():
-        df_tc.loc[(df_tc['table'] == i[1]['sys_table']) & (df_tc['column'] == i[1]['sys_table_column']), 'column_display_value'] = i[1]['display_value']
-        df_tc.loc[(df_tc['table'] == i[1]['sys_table']) & (df_tc['column'] == i[1]['sys_table_column']), 'column_display_order'] = i[1]['sys_order']
-    #df_tc.to_csv('df_tc2.csv', index=False)
-    df_tc = df_tc.sort_values(by=['table', 'column_display_order', 'column'])
-    return df_tc
+def create_column(form_data):
+    table_name = form_data['table']
+    column_name = form_data['column']
+    display_value = form_data['column_display_value']
+    display_order = form_data['sys_order']
+    type_name = form_data['data_type']
+    length = 0
+    if length in form_data.keys():
+        length = form_data['length']
+    column_default = ''
+    if column_default in form_data.keys():
+        column_default = form_data['column_default']
+    include = form_data['include']
+    hide = form_data['hide']
 
-
-def create_column(table_name, column_name, display_value, display_order, type_name, length, column_default):
     query = ''
     dv_query = ''
     debug_query = ''
@@ -170,8 +244,8 @@ DEFAULT '""" + str(column_default) + """'
 ;
 """
         dv_query = """
-INSERT INTO _sys_display_value (display_value, sys_table, sys_table_column, sys_order, include)
-VALUES ('""" + str(display_value) + """', '""" + str(table_name) + """', '""" + str(column_name) + """', """ + str(display_order) + """, false)
+INSERT INTO _sys_display_value (display_value, sys_table, sys_table_column, sys_order, include, hide)
+VALUES ('""" + str(display_value) + """', '""" + str(table_name) + """', '""" + str(column_name) + """', """ + str(display_order) + """, """ + str(include) + """, """ + str(hide) + """)
 ;
         """
         debug_query = query
@@ -189,8 +263,8 @@ BOOLEAN """
 DEFAULT """ + str(column_default)
         query += """;"""
         dv_query = """
-INSERT INTO _sys_display_value (display_value, sys_table, sys_table_column, sys_order, include)
-VALUES ('""" + str(display_value) + """', '""" + str(table_name) + """', '""" + str(column_name) + """', """ + str(display_order) + """, false)
+INSERT INTO _sys_display_value (display_value, sys_table, sys_table_column, sys_order, include, hide)
+VALUES ('""" + str(display_value) + """', '""" + str(table_name) + """', '""" + str(column_name) + """', """ + str(display_order) + """, """ + str(include) + """, """ + str(hide) + """)
 ;
         """
         debug_query = query
@@ -209,8 +283,8 @@ INTEGER """
 DEFAULT """ + str(column_default)
         query += """;"""
         dv_query = """
-INSERT INTO _sys_display_value (display_value, sys_table, sys_table_column, sys_order, include)
-VALUES ('""" + str(display_value) + """', '""" + str(table_name) + """', '""" + str(column_name) + """', """ + str(display_order) + """, false)
+INSERT INTO _sys_display_value (display_value, sys_table, sys_table_column, sys_order, include, hide)
+VALUES ('""" + str(display_value) + """', '""" + str(table_name) + """', '""" + str(column_name) + """', """ + str(display_order) + """, """ + str(include) + """, """ + str(hide) + """)
 ;
         """
         debug_query = query
@@ -233,8 +307,8 @@ NUMERIC(""" + str(length) + """) """
 DEFAULT """ + str(precicion + '.' + scale)
         query += """;"""
         dv_query = """
-INSERT INTO _sys_display_value (display_value, sys_table, sys_table_column, sys_order, include)
-VALUES ('""" + str(display_value) + """', '""" + str(table_name) + """', '""" + str(column_name) + """', """ + str(display_order) + """, false)
+INSERT INTO _sys_display_value (display_value, sys_table, sys_table_column, sys_order, include, hide)
+VALUES ('""" + str(display_value) + """', '""" + str(table_name) + """', '""" + str(column_name) + """', """ + str(display_order) + """, """ + str(include) + """, """ + str(hide) + """)
 ;
         """
         debug_query = query
@@ -252,8 +326,8 @@ DATE """
 DEFAULT '""" + str(column_default) + """'"""
         query += """;"""
         dv_query = """
-INSERT INTO _sys_display_value (display_value, sys_table, sys_table_column, sys_order, include)
-VALUES ('""" + str(display_value) + """', '""" + str(table_name) + """', '""" + str(column_name) + """', """ + str(display_order) + """, false)
+INSERT INTO _sys_display_value (display_value, sys_table, sys_table_column, sys_order, include, hide)
+VALUES ('""" + str(display_value) + """', '""" + str(table_name) + """', '""" + str(column_name) + """', """ + str(display_order) + """, """ + str(include) + """, """ + str(hide) + """)
 ;
         """
         debug_query = query
@@ -268,10 +342,10 @@ VALUES ('""" + str(display_value) + """', '""" + str(table_name) + """', '""" + 
 INSERT INTO _sys_dictionary (sys_table, sys_table_column, dict_value, sys_order)
 VALUES ('""" + str(table_name) + """', '""" + str(column_name) + """', '-- None --', 10);
         """
-        conn = cmdb_connect()
+        conn = cmdbdb.cmdb_connect()
         conn.execute(text(dict_query))
         conn.commit()
-        cmdb_disconnect(conn)
+        cmdbdb.cmdb_disconnect(conn)
 
         # GET THE UUID FOR -- None --
         get_query = """
@@ -280,12 +354,12 @@ WHERE sys_table = '""" + str(table_name) + """'
   AND sys_table_column = '""" + str(column_name) + """'
   AND dict_value = '-- None --';
         """
-        conn = cmdb_connect()
+        conn = cmdbdb.cmdb_connect()
         rows = conn.execute(text(get_query))
         uuid = []
         for row in rows:
             uuid = row[0]
-        cmdb_disconnect(conn)
+        cmdbdb.cmdb_disconnect(conn)
 
         # ACTUALLY CREATE THE NEW COLUMN WITH NEW DEFAULT
         query = """
@@ -296,10 +370,10 @@ DEFAULT '""" + str(uuid) + """'
 ;
 """
         dv_query = """
-INSERT INTO _sys_display_value (display_value, sys_table, sys_table_column, sys_order, include)
-VALUES ('""" + str(display_value) + """', '""" + str(table_name) + """', '""" + str(column_name) + """', """ + str(display_order) + """, false)
+INSERT INTO _sys_display_value (display_value, sys_table, sys_table_column, sys_order, include, hide)
+VALUES ('""" + str(display_value) + """', '""" + str(table_name) + """', '""" + str(column_name) + """', """ + str(display_order) + """, """ + str(include) + """, """ + str(hide) + """)
 ;
-"""
+        """
         #debug_query = dict_query
         #debug_query += '<br>\n'
         #debug_query += get_query
@@ -313,10 +387,10 @@ VALUES ('""" + str(display_value) + """', '""" + str(table_name) + """', '""" + 
 INSERT INTO _sys_reference (source, target)
 VALUES ('""" + str(table_name) + """', '""" + str(column_name) + """');
         """
-        conn = cmdb_connect()
+        conn = cmdbdb.cmdb_connect()
         conn.execute(text(ref_query))
         conn.commit()
-        cmdb_disconnect(conn)
+        cmdbdb.cmdb_disconnect(conn)
 
         # GET THE UUID FOR -- None --
         get_query = """
@@ -324,12 +398,12 @@ SELECT uuid FROM """ + str(column_name) + """
 WHERE name = '-- None --'
 ;
         """
-        conn = cmdb_connect()
+        conn = cmdbdb.cmdb_connect()
         rows = conn.execute(text(get_query))
         uuid = []
         for row in rows:
             uuid = row[0]
-        cmdb_disconnect(conn)
+        cmdbdb.cmdb_disconnect(conn)
 
         # ACTUALLY CREATE THE NEW COLUMN WITH NEW DEFAULT
         query = """
@@ -340,10 +414,10 @@ DEFAULT '""" + str(uuid) + """'
 ;
 """
         dv_query = """
-INSERT INTO _sys_display_value (display_value, sys_table, sys_table_column, sys_order, include)
-VALUES ('""" + str(display_value) + """', '""" + str(table_name) + """', '""" + str(column_name) + """', """ + str(display_order) + """, false)
+INSERT INTO _sys_display_value (display_value, sys_table, sys_table_column, sys_order, include, hide)
+VALUES ('""" + str(display_value) + """', '""" + str(table_name) + """', '""" + str(column_name) + """', """ + str(display_order) + """, """ + str(include) + """, """ + str(hide) + """)
 ;
-"""
+        """
 
     if type_name == 'function':
         # FIRST CREATE THE NEW FUNCTION ENTRY
@@ -351,10 +425,10 @@ VALUES ('""" + str(display_value) + """', '""" + str(table_name) + """', '""" + 
 INSERT INTO _sys_function (sys_table, sys_table_column, function_name)
 VALUES ('""" + str(table_name) + """', '""" + str(column_name) + """', '""" + str(column_name) + """')
         """
-        conn = cmdb_connect()
+        conn = cmdbdb.cmdb_connect()
         conn.execute(text(func_query))
         conn.commit()
-        cmdb_disconnect(conn)
+        cmdbdb.cmdb_disconnect(conn)
 
         # ACTUALLY CREATE THE NEW COLUMN
         query = """
@@ -364,18 +438,18 @@ VARCHAR(1)
 ;
 """
         dv_query = """
-INSERT INTO _sys_display_value (display_value, sys_table, sys_table_column, sys_order, include)
-VALUES ('""" + str(display_value) + """', '""" + str(table_name) + """', '""" + str(column_name) + """', """ + str(display_order) + """, false)
+INSERT INTO _sys_display_value (display_value, sys_table, sys_table_column, sys_order, include, hide)
+VALUES ('""" + str(display_value) + """', '""" + str(table_name) + """', '""" + str(column_name) + """', """ + str(display_order) + """, """ + str(include) + """, """ + str(hide) + """)
 ;
-"""
+        """
 
     # CREATE NEW COLUMN
     if query[0:9] != 'create # ':
-        conn = cmdb_connect()
+        conn = cmdbdb.cmdb_connect()
         conn.execute(text(query))
         conn.execute(text(dv_query))
         conn.commit()
-        cmdb_disconnect(conn)
+        cmdbdb.cmdb_disconnect(conn)
     else:
         debug_query = query
 
@@ -395,7 +469,8 @@ DELETE FROM _sys_dictionary WHERE sys_table = '""" + str(table) + """' AND sys_t
 DELETE FROM _sys_function WHERE sys_table = '""" + str(table) + """' AND sys_table_column = '""" + str(column) + """';
     """
     ref_query_source = """
-DELETE FROM _sys_reference WHERE source = '""" + str(table) + """' AND target = '""" + str(column) + """';
+-- DELETE FROM _sys_reference WHERE source = '""" + str(table) + """' AND target = '""" + str(column) + """';
+DELETE FROM _sys_reference WHERE source = '""" + str(table) + """';
     """
 #    ref_query_target = """
 #DELETE FROM _sys_reference WHERE target = '""" + str(table) + """';
@@ -403,7 +478,7 @@ DELETE FROM _sys_reference WHERE source = '""" + str(table) + """' AND target = 
     debug_query = query
     debug_query += '<br>\n'
     debug_query += dv_query
-    conn = cmdb_connect()
+    conn = cmdbdb.cmdb_connect()
     conn.execute(text(query))
     conn.execute(text(dv_query))
     conn.execute(text(dict_query))
@@ -411,35 +486,23 @@ DELETE FROM _sys_reference WHERE source = '""" + str(table) + """' AND target = 
     conn.execute(text(ref_query_source))
     #conn.execute(text(ref_query_target))
     conn.commit()
-    cmdb_disconnect(conn)
+    cmdbdb.cmdb_disconnect(conn)
     return debug_query
 
-def update_column(update_data):
-    query = ''
-    for key in update_data.keys():
-        if key[:13] == 'display_value' and update_data[key] != '':
-            skey = key.split('::')
-            query += """
-UPDATE _sys_display_value
-SET display_value = '""" + str(update_data[key]) + """'
-WHERE sys_table = '""" + str(skey[1]) + """'
-AND sys_table_column = '""" + str(skey[2]) + """'
-;\n
-            """
-        if key[:13] == 'display_order' and update_data[key] != '':
-            skey = key.split('::')
-            query += """
-UPDATE _sys_display_value
-SET sys_order = """ + str(update_data[key]) + """
-WHERE sys_table = '""" + str(skey[1]) + """'
-AND sys_table_column = '""" + str(skey[2]) + """'
-;\n
-            """
-    conn = cmdb_connect()
+def update_column(table, column, update_data):
+    query = """
+UPDATE _sys_display_value SET 
+display_value = '""" + str(update_data['display_value']) + """',
+sys_order = """ + str(update_data['sys_order']) + """,
+include = """ + str(update_data['include']) + """,
+hide = """ + str(update_data['hide']) + """
+WHERE sys_table = '""" + str(table) + """' 
+AND sys_table_column = '""" + str(column) + """'
+;
+"""
+    conn = cmdbdb.cmdb_connect()
     conn.execute(text(query))
     conn.commit()
-    cmdb_disconnect(conn)
+    cmdbdb.cmdb_disconnect(conn)
     return query
-
-
 

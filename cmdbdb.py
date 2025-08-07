@@ -73,6 +73,7 @@ WHERE _sys_display_value.sys_table = '""" + str(table) + """'
   AND _sys_display_value.sys_table_column <> ''
   AND information_schema.columns.table_name = _sys_display_value.sys_table
   AND _sys_display_value.include = true
+  AND _sys_display_value.hide = false
 ORDER BY sys_order, display_value
 ;
     """
@@ -125,6 +126,7 @@ LEFT JOIN cte_function ON _sys_display_value.sys_table_column = cte_function.fun
 WHERE _sys_display_value.sys_table = '""" + str(table) + """'
   AND _sys_display_value.sys_table_column <> ''
   AND information_schema.columns.table_name = _sys_display_value.sys_table
+  AND _sys_display_value.hide = false
 ORDER BY sys_order, display_value
 ;
     """
@@ -206,6 +208,20 @@ WHERE sys_table = '""" + str(table) + """'
 # TABLE
 #
 ################################################################################
+
+def get_tablelist():
+    query = """
+SELECT
+  sys_table,
+  display_value
+FROM _sys_display_value
+WHERE sys_table_column = ''
+ORDER BY sys_order
+    """
+    conn = cmdb_connect()
+    df = pd.read_sql(text(query), conn)
+    cmdb_disconnect(conn)
+    return df
 
 def get_table(table):
     df_display_value = get_display_value(table)
@@ -307,6 +323,38 @@ def update_table(table, insert_data):
 # OTHER STUFF...
 #
 ################################################################################
+
+def get_table_structure(table):
+    query = """
+WITH cte_display_value AS (
+  SELECT sys_table, sys_table_column, display_value, sys_order, include, hide
+  FROM _sys_display_value
+  WHERE sys_table = '""" + str(table) + """'
+)
+SELECT
+  pg_catalog.pg_tables.tablename AS table,
+  information_schema.columns.column_name AS column,
+  information_schema.columns.data_type AS data_type,
+  information_schema.columns.character_maximum_length AS character_maximum_length,
+  information_schema.columns.column_default AS column_default,
+  cte_display_value.display_value AS display_value,
+  cte_display_value.sys_order AS sys_order,
+  cte_display_value.include AS include,
+  cte_display_value.hide AS hide
+FROM pg_catalog.pg_tables
+JOIN information_schema.columns ON pg_catalog.pg_tables.tablename = information_schema.columns.table_name
+JOIN cte_display_value ON information_schema.columns.column_name = cte_display_value.sys_table_column
+WHERE pg_catalog.pg_tables.tableowner = 'cmdb'
+  AND pg_catalog.pg_tables.tablename = '""" + str(table) + """'
+  AND pg_catalog.pg_tables.tablename NOT LIKE '_sys_%'
+-- ORDER BY pg_catalog.pg_tables.tablename, information_schema.columns.ordinal_position
+ORDER BY cte_display_value.sys_order
+;
+    """
+    conn = cmdb_connect()
+    df = pd.read_sql(text(query), conn)
+    cmdb_disconnect(conn)
+    return df
 
 def get_all_tables_columns():
     query = """

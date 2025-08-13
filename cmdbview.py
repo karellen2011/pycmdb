@@ -35,7 +35,7 @@ def cmdbview(table, uuid, data):
     output = html_header()
     #output += str(table) + ' ' + str(uuid) + '<br>\n'
     #output += str(update_query) + '<br>\n'
-    output += '<form action="/view/' + str(table) + '/' + str(uuid) + '" method="POST">\n'
+    output += '<form action="/view/' + str(table) + '/' + str(uuid) + '" name="' + str(uuid) + '" id="' + str(uuid) + '" method="POST">\n'
     output += '<table id="default">\n'
     output += '<tr><th colspan="' + str(colspan) + '"><a id="headerlink" href="/table/list/' + str(table) + '">' + str(table_display_value) + '</a> > ' + str(df['name'].iloc[0]) + ' <button type="submit" name="update" value="update"><img src="/static/update.png" alt="Create" width="20"></button></th></tr>\n'
     output += '<tr>\n'
@@ -53,16 +53,21 @@ def cmdbview(table, uuid, data):
         #mc = cc % display_columns
         #dd = cc // display_columns
         #output += '<td>' + str(cc) + ' ' + str(mc) + ' ' + str(dd) + ' ' + str(col_dv)
-        output += '<td>' + str(col_dv)
+
+        # OUTPUT CELL NAME
+        if data_type != 'text':
+            output += '<td>' + str(col_dv)
         #output += ' (' + str(data_type) + ')'
         output += '</td>'
+
+        # OUTPUT CELL CONTENT
         if data_type == 'character varying' and col == 'uuid':
             output += '<td>' + str(df[col].iloc[0]) + '</td>'
         elif data_type == 'character varying' and col != 'uuid':
             if str(df[col].iloc[0]) != '-- None --':
                 output += '<td><input type="text" name="' + str(col) + '" value="' + str(df[col].iloc[0]) + '"></td>'
-            #else:
-            #     output += '<td>-- None --</td>'
+            else:
+                 output += '<td>' + str(df[col].iloc[0]) + '</td>'
         elif data_type == 'boolean':
             sel_list = ['True', 'False']
             output += '\n<td><select name="' + str(col) + '">\n'
@@ -71,7 +76,7 @@ def cmdbview(table, uuid, data):
                     output += '<option value="' + str(sl) + '" selected>' + str(sl) + '</option>\n'
                 else:
                     output += '<option value="' + str(sl) + '">' + str(sl) + '</option>\n'
-            output += '</select></td>'
+            output += '</select></td>\n'
         elif data_type == 'dictionary':
             df_sel = df_dict[df_dict['sys_table_column'] == str(col)]
             dict_color = df_sel[df_sel['uuid'] == str(df[col].iloc[0])]['color'].iloc[0]
@@ -88,13 +93,38 @@ def cmdbview(table, uuid, data):
                     output += '<option value="' + sl[1]['uuid'] + '" selected>' + sl[1]['dict_value'] + '</option>\n'
                 else:
                     output += '<option value="' + sl[1]['uuid'] + '">' + sl[1]['dict_value'] + '</option>\n'
-            output += '</select></td>'
+            output += '</select></td>\n'
         elif data_type == 'integer':
-            output += '<td><input type="text" name="' + str(col) + '" value="' + str(df[col].iloc[0]) + '"></td>'
+            output += '<td><input type="text" name="' + str(col) + '" value="' + str(df[col].iloc[0]) + '"></td>\n'
         elif data_type == 'numeric':
-            output += '<td><input type="text" name="' + str(col) + '" value="' + str(df[col].iloc[0]) + '"></td>'
+            output += '<td><input type="text" name="' + str(col) + '" value="' + str(df[col].iloc[0]) + '"></td>\n'
         elif data_type == 'date':
-            output += '<td><input type="text" name="' + str(col) + '" value="' + str(df[col].iloc[0]) + '"></td>'
+            output += '<td><input type="text" name="' + str(col) + '" value="' + str(df[col].iloc[0]) + '"></td>\n'
+        elif data_type == 'text':
+            if col_count != 0:
+                while col_count < display_columns:
+                    output += '<td></td><td></td>'
+                    col_count += 1
+            col_count = 1
+            output += '</tr>\n'
+            output += '<tr><td colspan="' + str(colspan) + '">' + str(col_dv) + '</td></tr>\n'
+            output += '<tr><td colspan="' + str(colspan) + '">'
+            output += '<div class="tab">\n'
+            output += '<button class="tablinks" onclick="openTab(event, \'View\')" id="defaultOpen">View</button>\n'
+            output += '<button class="tablinks" onclick="openTab(event, \'Edit\')">Edit</button>\n'
+            output += '</div>\n'
+            output += '<div id="View" class="tabcontent">\n'
+            output += '<p>' + str(df[col].iloc[0]) + '</p>\n'
+            output += '</div>\n'
+            output += '<div id="Edit" class="tabcontent">\n'
+            #output += '<p id="debug">' + str(df[col].iloc[0]) + '</p>\n'
+            #output += '<input type="text" name="' + str(col) + '" value="' + str(df[col].iloc[0]) + '">\n'
+            output += '<textarea name="' + str(col) + '">' + str(df[col].iloc[0]) + '</textarea>\n'
+            output += '</div>\n'
+            output += '<script>\n'
+            output += 'document.getElementById("defaultOpen").click();\n'
+            output += '</script>\n'
+            output += '</td></tr>\n<tr>\n'
         elif data_type == 'function':
             output += '<td>'
             output += str(function.functioncall(df['uuid'].iloc[0])) + '<br>'
@@ -113,6 +143,7 @@ def cmdbview(table, uuid, data):
             col_count += 1
     output += '\n</tr>\n'
     output += '</table>\n'
+    #output += str(col_count) + '<br>\n'
     
     # DISPLAY REFERENCES
     df_dv = get_display_value(table)
@@ -336,7 +367,7 @@ def update_data(table, uuid, data):
         if key != 'update' and data[key] != 'update':
             data_type = df_dv[df_dv['sys_table_column'] == key]['data_type'].iloc[0]
             #query += str(data_type) + ' '
-            if data_type == 'character varying' or data_type == 'date' or data_type == 'dictionary' or data_type == 'reference':
+            if data_type == 'character varying' or data_type == 'date' or data_type == 'dictionary' or data_type == 'reference' or data_type == 'text':
                 query += str(key) + ' = \'' + str(data[key]).replace("'", "''") + '\', '
             else:
                 if data_type != 'function':

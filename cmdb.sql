@@ -212,6 +212,21 @@ CREATE TABLE public.hardware_asset (
 ALTER TABLE public.hardware_asset OWNER TO cmdb;
 
 --
+-- Name: knowledge; Type: TABLE; Schema: public; Owner: cmdb
+--
+
+CREATE TABLE public.knowledge (
+    uuid character varying(32) DEFAULT public.get_uuid() NOT NULL,
+    name character varying(256),
+    active boolean DEFAULT true NOT NULL,
+    article text DEFAULT 'Please enter some knowledge...'::text,
+    approved boolean DEFAULT false
+);
+
+
+ALTER TABLE public.knowledge OWNER TO cmdb;
+
+--
 -- Name: location; Type: TABLE; Schema: public; Owner: cmdb
 --
 
@@ -259,7 +274,8 @@ CREATE TABLE public.processes (
     supplier character varying(256) DEFAULT ''::character varying,
     input character varying(256) DEFAULT ''::character varying,
     output character varying(256) DEFAULT ''::character varying,
-    customer character varying(256) DEFAULT ''::character varying
+    customer character varying(256) DEFAULT ''::character varying,
+    knowledge character varying(32) DEFAULT '10f2cfaab5cb4967adb602b9c0f8e53e'::character varying
 );
 
 
@@ -310,6 +326,27 @@ CREATE TABLE public.software (
 ALTER TABLE public.software OWNER TO cmdb;
 
 --
+-- Name: test; Type: TABLE; Schema: public; Owner: cmdb
+--
+
+CREATE TABLE public.test (
+    uuid character varying(32) DEFAULT public.get_uuid() NOT NULL,
+    name character varying(256),
+    active boolean DEFAULT true NOT NULL,
+    count integer DEFAULT 0,
+    "float" numeric(8,2) DEFAULT 0.0,
+    bool boolean DEFAULT true,
+    "varchar" character varying(64) DEFAULT 'default'::character varying,
+    order_date date DEFAULT '2025-08-30'::date,
+    description text DEFAULT 'Please enter some text...'::text,
+    test_lc character varying(32) DEFAULT 'ad71d6aecdaf4b3a8c04ed1136f592f4'::character varying,
+    processes character varying(32) DEFAULT '14f132584c6f4a91a08113a3af7ab6b0'::character varying
+);
+
+
+ALTER TABLE public.test OWNER TO cmdb;
+
+--
 -- Data for Name: _sys_dictionary; Type: TABLE DATA; Schema: public; Owner: cmdb
 --
 
@@ -355,6 +392,9 @@ eb6a50d707e44681af665acca3615c25	service_asset	environment	Test	10
 2d42948af8064b1d884d149024d1f591	network_interfaces	connector	-- None --	10	
 addcb50381a84859ba4acc90c95fa1b0	network_interfaces	connector	Built-In	20	
 7ca4127158534d97a0ba4e930cd4367c	network_interfaces	connector	USB	20	
+ad71d6aecdaf4b3a8c04ed1136f592f4	test	test_lc	-- None --	10	
+3f9d607dab794340b1477cae4d111384	test	test_lc	Active	10	FF3838
+b83656c33ea44205bc6d94a66e034f25	test	test_lc	Inactive	10	A4ABB6
 \.
 
 
@@ -461,6 +501,25 @@ dca5ee3c15154da9bcde5d4c1f30f451	Service	service_asset	service	50	f	f
 d660a37d2d71414bbc906418b2c4c79e	Country Longitude	country	country_longitude	150	f	f
 a61722e99aa34f3bbad24e579805af5a	Capital Latitude	country	capital_latitude	160	f	f
 52107a474ddb44219e73a1333dd4c0f1	Capital Longitude	country	capital_longitude	170	f	f
+b4e8aa2d07d94b2d9b85fec266eee6bc	Knowledge	knowledge		400	f	f
+ff8feff6be9942e1847ac6339ef2faf0	UUID	knowledge	uuid	10	f	f
+ab4cfb5513324987a25fd93f4346a0f6	Name	knowledge	name	20	f	f
+fc25da8b74884f12b69898aa29d93a91	Active	knowledge	active	30	f	f
+833d9b29830b44b187222098d88fa82c	Test	test		10	f	f
+2107c38e644548eb886f6bd6fe235872	UUID	test	uuid	10	f	f
+4ffc858929a849ef96d92d4e37197084	Name	test	name	20	f	f
+a308a1eb4de740878456688512df8850	Active	test	active	30	f	f
+0d771ba55b8e4cb4aefa5811c6218821	Amount	test	count	40	t	f
+566220766c8f48fd9262b2e63a743f7a	Float	test	float	50	f	f
+8895e466b15949e6bb1ab196e33bbcb8	Bool	test	bool	60	f	t
+eac52da108e6408eb63997bd77e9303f	VarChar	test	varchar	70	f	f
+c313d84b3f33496b9983945afc392362	Order Date	test	order_date	80	f	f
+b0f66d39b9d145a7bc06a78f2d6d7642	Description	test	description	90	f	t
+6b3d87eeeacf4ed396986d6bc6d389ee	Lifecycle	test	test_lc	25	f	f
+04f6a6fd2cd846ada69c2153f34dfca9	Process	test	processes	55	f	f
+4f6add824af746f5b0bdc0122870db7e	Article	knowledge	article	40	f	t
+3b68cede2f7d4f6a864af8720f24bb5a	Knowledge	processes	knowledge	80	f	f
+08c34fefde084ccea14736632bcb4a53	Approved	knowledge	approved	50	t	f
 \.
 
 
@@ -469,7 +528,6 @@ a61722e99aa34f3bbad24e579805af5a	Capital Latitude	country	capital_latitude	160	f
 --
 
 COPY public._sys_function (uuid, sys_table, sys_table_column, function_name) FROM stdin;
-48c66baedd7e411787a521b37c6685c7	test	qrcode	qrcode
 a0bd6db91e1b4de083d81264ee55a674	hardware_asset	qrcode	qrcode
 d5db789d8618478da68c0f916146ae95	hardware_asset	qrcode	qrcode
 \.
@@ -490,6 +548,8 @@ bcb1e0a0d48a41c592fe0cbc60969779	harddisk	hardware_asset
 9824a18bdefa4da5b61f5269bed230c1	network_interfaces	hardware_asset
 fd505941598647f6bbd0a0863dd80fb6	service_asset	service
 45d3f0548a374824a48bdd3514f0d01a	location	country
+3e91a8576272419995e4584e8fab5c56	test	processes
+6c948b6d925c4c2fb2766f44708ae343	processes	knowledge
 \.
 
 
@@ -829,6 +889,20 @@ cbd2db34fed44c82a53336291a5a0e50	web01	t	49afea1c3a3748e6b90dcb00d3e8e78d	6352de
 
 
 --
+-- Data for Name: knowledge; Type: TABLE DATA; Schema: public; Owner: cmdb
+--
+
+COPY public.knowledge (uuid, name, active, article, approved) FROM stdin;
+10f2cfaab5cb4967adb602b9c0f8e53e	-- None --	t	Please enter some knowledge...	f
+95d0d19f69d049d0bda815c29fee92ac	IT Procurement	t	<b>Procurement</b> is the process of locating and agreeing to terms and purchasing goods, services, or other works from an external source, often with the use of a tendering or competitive bidding process.<br>\r\n<br>\r\nSource: https://en.wikipedia.org/wiki/Procurement	f
+f14b1cfd50b1412cb7c680ef907a4130	IMAC	t	<ul>\r\n<li><b>I</b>nstall</li>\r\n<li><b>M</b>ove</li>\r\n<li><b>A</b>dd</li>\r\n<li><b>C</b>hange</li>\r\n</ul>	f
+b13e0e9513ad4ef6bddf4461a51d1e7b	DINROS	t	<ul>\r\n<li><b>D</b>iscover</li>\r\n<li><b>I</b>nventory</li>\r\n<li><b>N</b>ormalize</li>\r\n<li><b>R</b>econcile</li>\r\n<li><b>O</b>ptimize</li>\r\n<li><b>S</b>hare</li>\r\n</ul>	f
+7290d1ee24404e68b41a9a544c7b0cb3	ITAD	t	IT Asset Disposition (ITAD) is the process of securely and responsibly <b>handling IT equipment that has reached the end of its lifecycle</b>.<br>\r\n<br>\r\nSource: https://invgate.com/itsm/it-asset-management/it-asset-disposition	f
+d60d718d1c05459a990e5732db559ada	Knowledge Management	t	<b>Knowledge management (KM)</b> is the set of procedures for producing, disseminating, utilizing, and overseeing an organization's knowledge and data.<br>\r\n<br>\r\nSource: <a href="https://en.wikipedia.org/wiki/Knowledge_management">https://en.wikipedia.org/wiki/Knowledge_management</a>	t
+\.
+
+
+--
 -- Data for Name: location; Type: TABLE DATA; Schema: public; Owner: cmdb
 --
 
@@ -871,13 +945,13 @@ eecd78c847c44644b9b5db0e8d4dbe9a	ppp1	t	00:00:00:00:00:00	172.16.12.4	255.255.25
 -- Data for Name: processes; Type: TABLE DATA; Schema: public; Owner: cmdb
 --
 
-COPY public.processes (uuid, name, active, supplier, input, output, customer) FROM stdin;
-edc06026aa604401862fae2250d9cd1e	IT Procurement	t	External	Hardware	Hardware Asset	Internal
-bb7fc1c0fbf549f99db1696cc408ed61	IMAC	t	Internal	Hardware Asset	Hardware Asset	Internal
-b761017c828945a489e3e66767ba3183	ITAD	t	Internal	Hardware Asset	Hardware	External
-564f44e42d544ee4884221a73b371952	RMA	t	Internal	Hardware Asset	Hardware Asset	Internal
-14f132584c6f4a91a08113a3af7ab6b0	-- None --	f				
-628ccb21aaf745a989cbaa716bc89d86	Knowledge Management	t	Internal	Knowledge	Article	Internal
+COPY public.processes (uuid, name, active, supplier, input, output, customer, knowledge) FROM stdin;
+14f132584c6f4a91a08113a3af7ab6b0	-- None --	f					10f2cfaab5cb4967adb602b9c0f8e53e
+bb7fc1c0fbf549f99db1696cc408ed61	IMAC	t	Internal	Hardware Asset	Hardware Asset	Internal	f14b1cfd50b1412cb7c680ef907a4130
+b761017c828945a489e3e66767ba3183	ITAD	t	Internal	Hardware Asset	Hardware	External	7290d1ee24404e68b41a9a544c7b0cb3
+edc06026aa604401862fae2250d9cd1e	IT Procurement	t	External	Hardware	Hardware Asset	Internal	95d0d19f69d049d0bda815c29fee92ac
+628ccb21aaf745a989cbaa716bc89d86	Knowledge Management	t	Internal	Knowledge	Article	Internal	d60d718d1c05459a990e5732db559ada
+564f44e42d544ee4884221a73b371952	RMA	t	Internal	Hardware Asset	Hardware Asset	Internal	d60d718d1c05459a990e5732db559ada
 \.
 
 
@@ -921,6 +995,17 @@ b608e43fb43149a295a917a80866b284	Armbian	t	bookworm/sid	84fbc39baefa4df2b1e0debc
 d2947f3a0fad4c53bd5c4bbc07fd10af	Armbian	t	9.13	037a2e983c024ce090f673a0590b943c	205399429d1f43edb37a761cb4102317
 ddb42da316ac461fb0b964eb1a3fc083	MPR-21871	t	v1.01c	037a2e983c024ce090f673a0590b943c	205399429d1f43edb37a761cb4102317
 3cd23421d61c426798b8f74347602c85	postgresql	t	14.15	84fbc39baefa4df2b1e0debc1426e8df	6e7ed0a3a1ba462ca5f0b0b15b4a8bae
+\.
+
+
+--
+-- Data for Name: test; Type: TABLE DATA; Schema: public; Owner: cmdb
+--
+
+COPY public.test (uuid, name, active, count, "float", bool, "varchar", order_date, description, test_lc, processes) FROM stdin;
+6b6ce29be1d349ddabf6f6aacfafeb2e	-- None --	f	0	0.00	t	default	2025-08-30	Please enter some text...	b83656c33ea44205bc6d94a66e034f25	14f132584c6f4a91a08113a3af7ab6b0
+e82f6edb6ed84dd78b9fc6236e5b2c95	Keyboard	t	100	160.22	t	default	2025-08-30	Please enter some text...	3f9d607dab794340b1477cae4d111384	628ccb21aaf745a989cbaa716bc89d86
+13c32feaa8c6434794d4df6f10fef2df	Mouse	t	50	123.46	t	mouse	2024-08-30	Please enter some text...	3f9d607dab794340b1477cae4d111384	628ccb21aaf745a989cbaa716bc89d86
 \.
 
 

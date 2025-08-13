@@ -347,7 +347,7 @@ def tablelist(table, row_start, number_rows, filter_col, filter_con, filter_val,
                 # OUTPUT DICTIONARY
                 if internal_data_type == 'dictionary':
                     if str(row[1][column + '_display_color']) != '':
-                        output += '<td style="background:#' + str(row[1][column + '_display_color']) + '">' + str(row[1][column + '_display_value']) + '</td>'
+                        output += '<td style="background:#' + str(row[1][column + '_display_color']) + ';">' + str(row[1][column + '_display_value']) + '</td>'
                     else:
                         output += '<td>' + str(row[1][column + '_display_value']) + '</td>'
                 # OUTPUT REFERENCE

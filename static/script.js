@@ -1,4 +1,5 @@
 function openTab(evt, tabName) {
+  evt.preventDefault();
   // Source: https://www.w3schools.com/w3css/w3css_tabulators.asp
   // Declare all variables
   var i, tabcontent, tablinks;
@@ -18,5 +19,8 @@ function openTab(evt, tabName) {
   // Show the current tab, and add an "active" class to the button that opened the tab
   document.getElementById(tabName).style.display = "block";
   evt.currentTarget.className += " active";
+
+// Get the element with id="defaultOpen" and click on it
+//document.getElementById("defaultOpen").click();
 }
 

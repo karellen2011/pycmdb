@@ -8,12 +8,15 @@ import cmdbdb
 
 def adminlistcolumns(form_data):
 
+    insert_query = ''
+    dv_query = ''
+
     update_key = ''
     update_data = {}
     update_query = ''
 
     if 'action' in form_data.keys() and form_data['action'] == 'insert':
-        create_column(form_data)
+        insert_query, dv_query = create_column(form_data)
     if 'drop_column' in form_data.keys():
         table = form_data['drop_column'].split('::')[0]
         column = form_data['drop_column'].split('::')[1]
@@ -47,8 +50,12 @@ def adminlistcolumns(form_data):
     #output += str(update_data) + '<br>\n'
     #output += str(update_query) + '<br>\n'
     #output += '<br>\n'
+    #if 'column_default' in form_data.keys():
+    #    output += str(form_data['column_default']) + '<br>\n'
     #output += str(form_data) + '<br>\n'
     #output += str(table) + '<br>\n'
+    #output += '<p id="debug">' + str(insert_query) + '</p>\n'
+    #output += '<p id="debug">' + str(dv_query) + '</p>\n'
     output += '<form action="/admin/column/" method="POST">\n'
     output += '<table id="default">\n'
     output += '<tr><th>Table</th><th>Data Type</th><th>Length</th><th>Default</th><th>Column</th><th>Display Value</th><th>Display Order</th><th>Include</th><th>Hide</th><th></th></tr>'
@@ -66,7 +73,7 @@ def adminlistcolumns(form_data):
 
     # LIST COLUMN
     if table != '':
-        data_type_dict = {'': '', 'reference': 'Reference', 'dictionary': 'Dictionary', 'function': 'Function', 'boolean': 'Boolean', 'integer': 'Integer', 'float': 'Float', 'character varying': 'Character Varying', 'date': 'Date'}
+        data_type_dict = {'': '', 'reference': 'Reference', 'dictionary': 'Dictionary', 'function': 'Function', 'boolean': 'Boolean', 'integer': 'Integer', 'float': 'Float', 'character varying': 'Character Varying', 'date': 'Date', 'text': 'Text'}
         output += '<td><select name="data_type" onchange="this.form.submit()">\n'
         for key in data_type_dict:
             if data_type == key:
@@ -143,6 +150,16 @@ def adminlistcolumns(form_data):
                 output += '<td>'
                 output += '<input type="text" name="column">'
                 output += '</td>\n'
+            elif data_type == 'text':
+                output += '<td>\n'
+                #output += '<input type="text" name="length" value="256">\n'
+                output += '</td>'
+                output += '<td>\n'
+                output += '<input type="text" name="column_default">'
+                output += '</td>'
+                output += '<td>'
+                output += '<input type="text" name="column">'
+                output += '</td>\n'
             output += '<td>'
             output += '<input type="text" name="column_display_value">'
             output += '</td>\n'
@@ -156,8 +173,12 @@ def adminlistcolumns(form_data):
             output += '</select></td>\n'
             output += '<td>'
             output += '<select name="hide">\n'
-            output += '<option value="true">True</option>\n'
-            output += '<option value="false" selected>False</option>\n'
+            if data_type == 'text':
+                output += '<option value="true" selected>True</option>\n'
+                output += '<option value="false">False</option>\n'
+            else:
+                output += '<option value="true">True</option>\n'
+                output += '<option value="false" selected>False</option>\n'
             output += '</select></td>\n'
             output += '<td><button type="submit" name="action" value="insert"><img src="/static/create.png" alt="Insert" width="20"></button></td>\n'
         else:
@@ -210,178 +231,103 @@ def adminlistcolumns(form_data):
     return output
 
 def create_column(form_data):
-    table_name = form_data['table']
-    column_name = form_data['column']
-    display_value = form_data['column_display_value']
-    display_order = form_data['sys_order']
-    type_name = form_data['data_type']
-    length = 0
-    if length in form_data.keys():
-        length = form_data['length']
-    column_default = ''
-    if column_default in form_data.keys():
-        column_default = form_data['column_default']
-    include = form_data['include']
-    hide = form_data['hide']
-
     query = ''
     dv_query = ''
-    debug_query = ''
-    column_name = column_name.lower().replace(' ', '_').replace('-', '_')
+    table_name = form_data['table']
+    column_name = form_data['column']
+    data_type = form_data['data_type']
+
+    display_value = form_data['column_display_value']
     if display_value == '':
         display_value = column_name
+    display_order = form_data['sys_order']
     if display_order == '':
-        display_order = 10
-    query += 'create # ' + str(table_name) + ' # ' + str(column_name) + ' # ' + str(display_value) + ' # ' + str(display_order) + ' # ' + str(type_name) + ' # ' + str(length) + ' # ' + str(column_default) + ' #<br>\n'
-
+        display_order = '10'
+    include = form_data['include']
+    hide = form_data['hide']
+    
     # VARCHAR
-    if type_name == 'character varying':
-        query = """
-ALTER TABLE """ + str(table_name) + """
-ADD COLUMN """ + str(column_name) + """
-VARCHAR(""" + str(length) + """)
-DEFAULT '""" + str(column_default) + """'
-;
-"""
+    if data_type == 'character varying':
+        query += """ALTER TABLE """ + str(table_name) + """ ADD COLUMN """ + str(column_name)
+        if 'length'in form_data.keys() and form_data['length'] != '':
+            query += """ VARCHAR(""" + str(form_data['length']) + """)"""
+        else:
+            query += """ VARCHAR(256)"""
+        if 'column_default' in form_data.keys() and form_data['column_default'] != '':
+            query += """ DEFAULT '""" + str(form_data['column_default']) + """'"""
+        query += """;"""
         dv_query = """
 INSERT INTO _sys_display_value (display_value, sys_table, sys_table_column, sys_order, include, hide)
 VALUES ('""" + str(display_value) + """', '""" + str(table_name) + """', '""" + str(column_name) + """', """ + str(display_order) + """, """ + str(include) + """, """ + str(hide) + """)
 ;
         """
-        debug_query = query
-        debug_query += '<br>\n'
-        debug_query += dv_query
 
     # BOOLEAN
-    if type_name == 'boolean':
-        query = """
-ALTER TABLE """ + str(table_name) + """
-ADD COLUMN """ + str(column_name) + """
-BOOLEAN """
-        if column_default != '':
-            query += """
-DEFAULT """ + str(column_default)
+    if data_type == 'boolean':
+        query += """ALTER TABLE """ + str(table_name) + """ ADD COLUMN """ + str(column_name) + """ BOOLEAN """
+        if 'column_default' in form_data.keys() and form_data['column_default'] != '':
+            query += """ DEFAULT """ + str(form_data['column_default'])
         query += """;"""
         dv_query = """
 INSERT INTO _sys_display_value (display_value, sys_table, sys_table_column, sys_order, include, hide)
 VALUES ('""" + str(display_value) + """', '""" + str(table_name) + """', '""" + str(column_name) + """', """ + str(display_order) + """, """ + str(include) + """, """ + str(hide) + """)
 ;
         """
-        debug_query = query
-        debug_query += '<br>\n'
-        debug_query += dv_query
 
     # INTEGER
-    if type_name == 'integer':
-        # ADD ZERO AS DEFAULT!
-        query = """
-ALTER TABLE """ + str(table_name) + """
-ADD COLUMN """ + str(column_name) + """
-INTEGER """
-        if column_default != '':
-            query += """
-DEFAULT """ + str(column_default)
+    if data_type == 'integer':
+        query += """ALTER TABLE """ + str(table_name) + """ ADD COLUMN """ + str(column_name) + """ INTEGER """
+        if 'column_default' in form_data.keys() and form_data['column_default'] != '':
+            query += """ DEFAULT """ + str(form_data['column_default'])
         query += """;"""
         dv_query = """
 INSERT INTO _sys_display_value (display_value, sys_table, sys_table_column, sys_order, include, hide)
 VALUES ('""" + str(display_value) + """', '""" + str(table_name) + """', '""" + str(column_name) + """', """ + str(display_order) + """, """ + str(include) + """, """ + str(hide) + """)
 ;
         """
-        debug_query = query
-        debug_query += '<br>\n'
-        debug_query += dv_query
 
     # FLOAT
-    if type_name == 'float':
-        if length == '':
-            length = '8, 2'
-        replace_column_default = length.replace(' ', '').split(',')
-        precicion = '0'
-        scale = int(replace_column_default[1]) * '0'
-        query = """
-ALTER TABLE """ + str(table_name) + """
-ADD COLUMN """ + str(column_name) + """
-NUMERIC(""" + str(length) + """) """
-        #if column_default != '':
-        query += """
-DEFAULT """ + str(precicion + '.' + scale)
+    if data_type == 'float':
+        query += """ALTER TABLE """ + str(table_name) + """ ADD COLUMN """ + str(column_name)
+        if 'length'in form_data.keys() and form_data['length'] != '':
+            query += """ NUMERIC(""" + str(form_data['length']) + """)"""
+        else:
+            query += """ NUMERIC(8,2)"""
+        if 'column_default' in form_data.keys() and form_data['column_default'] != '':
+            query += """ DEFAULT """ + str(form_data['column_default'])
         query += """;"""
         dv_query = """
 INSERT INTO _sys_display_value (display_value, sys_table, sys_table_column, sys_order, include, hide)
 VALUES ('""" + str(display_value) + """', '""" + str(table_name) + """', '""" + str(column_name) + """', """ + str(display_order) + """, """ + str(include) + """, """ + str(hide) + """)
 ;
         """
-        debug_query = query
-        debug_query += '<br>\n'
-        debug_query += dv_query
 
     # DATE
-    if type_name == 'date':
-        query = """
-ALTER TABLE """ + str(table_name) + """
-ADD COLUMN """ + str(column_name) + """
-DATE """
-        if column_default != '':
-            query += """
-DEFAULT '""" + str(column_default) + """'"""
+    if data_type == 'date':
+        query += """ALTER TABLE """ + str(table_name) + """ ADD COLUMN """ + str(column_name) + """ DATE """
+        if 'column_default' in form_data.keys() and form_data['column_default'] != '':
+            query += """ DEFAULT '""" + str(form_data['column_default']) + """'"""
         query += """;"""
         dv_query = """
 INSERT INTO _sys_display_value (display_value, sys_table, sys_table_column, sys_order, include, hide)
 VALUES ('""" + str(display_value) + """', '""" + str(table_name) + """', '""" + str(column_name) + """', """ + str(display_order) + """, """ + str(include) + """, """ + str(hide) + """)
 ;
         """
-        debug_query = query
-        debug_query += '<br>\n'
-        debug_query += dv_query
 
-    # DICTIONARY
-    if type_name == 'dictionary':
-        query = 'foo'
-        # FIRST CREATE THE DICTIONARY ENTRY
-        dict_query = """
-INSERT INTO _sys_dictionary (sys_table, sys_table_column, dict_value, sys_order)
-VALUES ('""" + str(table_name) + """', '""" + str(column_name) + """', '-- None --', 10);
-        """
-        conn = cmdbdb.cmdb_connect()
-        conn.execute(text(dict_query))
-        conn.commit()
-        cmdbdb.cmdb_disconnect(conn)
-
-        # GET THE UUID FOR -- None --
-        get_query = """
-SELECT uuid FROM _sys_dictionary
-WHERE sys_table = '""" + str(table_name) + """'
-  AND sys_table_column = '""" + str(column_name) + """'
-  AND dict_value = '-- None --';
-        """
-        conn = cmdbdb.cmdb_connect()
-        rows = conn.execute(text(get_query))
-        uuid = []
-        for row in rows:
-            uuid = row[0]
-        cmdbdb.cmdb_disconnect(conn)
-
-        # ACTUALLY CREATE THE NEW COLUMN WITH NEW DEFAULT
-        query = """
-ALTER TABLE """ + str(table_name) + """
-ADD COLUMN """ + str(column_name) + """
-VARCHAR(""" + str(len(uuid)) + """)
-DEFAULT '""" + str(uuid) + """'
-;
-"""
+    # TEXT
+    if data_type == 'text':
+        query += """ALTER TABLE """ + str(table_name) + """ ADD COLUMN """ + str(column_name) + """ TEXT """
+        if 'column_default' in form_data.keys() and form_data['column_default'] != '':
+            query += """ DEFAULT '""" + str(form_data['column_default']) + """'"""
+        query += """;"""
         dv_query = """
 INSERT INTO _sys_display_value (display_value, sys_table, sys_table_column, sys_order, include, hide)
 VALUES ('""" + str(display_value) + """', '""" + str(table_name) + """', '""" + str(column_name) + """', """ + str(display_order) + """, """ + str(include) + """, """ + str(hide) + """)
 ;
         """
-        #debug_query = dict_query
-        #debug_query += '<br>\n'
-        #debug_query += get_query
-        #debug_query += '<br>\n'
-        #debug_query += str(uuid)
-        #debug_query += '<br>\n'
 
-    if type_name == 'reference':
+    # REFERENCE
+    if data_type == 'reference':
         # FIRST CREATE THE REFERENCE ENTRY
         ref_query = """
 INSERT INTO _sys_reference (source, target)
@@ -400,7 +346,7 @@ WHERE name = '-- None --'
         """
         conn = cmdbdb.cmdb_connect()
         rows = conn.execute(text(get_query))
-        uuid = []
+        uuid = ''
         for row in rows:
             uuid = row[0]
         cmdbdb.cmdb_disconnect(conn)
@@ -419,7 +365,7 @@ VALUES ('""" + str(display_value) + """', '""" + str(table_name) + """', '""" + 
 ;
         """
 
-    if type_name == 'function':
+    if data_type == 'function':
         # FIRST CREATE THE NEW FUNCTION ENTRY
         func_query = """
 INSERT INTO _sys_function (sys_table, sys_table_column, function_name)
@@ -443,17 +389,55 @@ VALUES ('""" + str(display_value) + """', '""" + str(table_name) + """', '""" + 
 ;
         """
 
-    # CREATE NEW COLUMN
-    if query[0:9] != 'create # ':
+    if data_type == 'dictionary':
+        query = 'foo'
+        # FIRST CREATE THE DICTIONARY ENTRY
+        dict_query = """
+INSERT INTO _sys_dictionary (sys_table, sys_table_column, dict_value, sys_order)
+VALUES ('""" + str(table_name) + """', '""" + str(column_name) + """', '-- None --', 10);
+        """
         conn = cmdbdb.cmdb_connect()
-        conn.execute(text(query))
-        conn.execute(text(dv_query))
+        conn.execute(text(dict_query))
         conn.commit()
         cmdbdb.cmdb_disconnect(conn)
-    else:
-        debug_query = query
 
-    return debug_query
+        # GET THE UUID FOR -- None --
+        get_query = """
+SELECT uuid FROM _sys_dictionary
+WHERE sys_table = '""" + str(table_name) + """'
+  AND sys_table_column = '""" + str(column_name) + """'
+  AND dict_value = '-- None --';
+        """
+        conn = cmdbdb.cmdb_connect()
+        rows = conn.execute(text(get_query))
+        uuid = ''
+        for row in rows:
+            uuid = row[0]
+        cmdbdb.cmdb_disconnect(conn)
+
+        # ACTUALLY CREATE THE NEW COLUMN WITH NEW DEFAULT
+        query = """
+ALTER TABLE """ + str(table_name) + """
+ADD COLUMN """ + str(column_name) + """
+VARCHAR(""" + str(len(uuid)) + """)
+DEFAULT '""" + str(uuid) + """'
+;
+"""
+        dv_query = """
+INSERT INTO _sys_display_value (display_value, sys_table, sys_table_column, sys_order, include, hide)
+VALUES ('""" + str(display_value) + """', '""" + str(table_name) + """', '""" + str(column_name) + """', """ + str(display_order) + """, """ + str(include) + """, """ + str(hide) + """)
+;
+        """
+
+
+    conn = cmdbdb.cmdb_connect()
+    conn.execute(text(query))
+    conn.execute(text(dv_query))
+    conn.commit()
+    cmdbdb.cmdb_disconnect(conn)
+
+    return query, dv_query
+
 
 def delete_column(table, column):
     query = """
@@ -469,8 +453,7 @@ DELETE FROM _sys_dictionary WHERE sys_table = '""" + str(table) + """' AND sys_t
 DELETE FROM _sys_function WHERE sys_table = '""" + str(table) + """' AND sys_table_column = '""" + str(column) + """';
     """
     ref_query_source = """
--- DELETE FROM _sys_reference WHERE source = '""" + str(table) + """' AND target = '""" + str(column) + """';
-DELETE FROM _sys_reference WHERE source = '""" + str(table) + """';
+DELETE FROM _sys_reference WHERE source = '""" + str(table) + """' AND target = '""" + str(column) + """';
     """
 #    ref_query_target = """
 #DELETE FROM _sys_reference WHERE target = '""" + str(table) + """';

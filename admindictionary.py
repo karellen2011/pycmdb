@@ -4,12 +4,12 @@ import pandas as pd
 from cmdbhtml import html_header, html_footer
 from cmdbdb import cmdb_connect, cmdb_disconnect
 
-def adminlistdict(table, column, dict_value, dict_color, display_order, action, uuid):
+def adminlistdict(table, column, dict_value, cell_color, font_color, display_order, action, uuid):
     query = ''
     if table != '' and column != '' and dict_value != '' and display_order != '' and action == 'create':
-        query = add_dict_entry(table, column, dict_value, dict_color, display_order)
+        query = add_dict_entry(table, column, dict_value, cell_color, font_color, display_order)
     if table != '' and column != '' and dict_value != '' and display_order != '' and action == 'update' and uuid != '':
-        query = up_dict_entry(table, column, dict_value, dict_color, display_order, uuid)
+        query = up_dict_entry(table, column, dict_value, cell_color, font_color, display_order, uuid)
 
     df = get_dictionaries()
     if table != '':
@@ -29,7 +29,7 @@ def adminlistdict(table, column, dict_value, dict_color, display_order, action, 
     #output += str(display_order) + '<br>\n'
     output += '<form action="/admin/dict/" method="POST">\n'
     output += '<table id="default">\n'
-    output += '<tr><th>Table</th><th>Column</th><th>Dict Value</th><th>Color</th><th>Order</th><th></th></tr>\n'
+    output += '<tr><th>Table</th><th>Column</th><th>Dict Value</th><th>Cell Color</th><th>Font Color</th><th>Order</th><th></th></tr>\n'
 
     # CREATE A NEW DICTIONARY
     output += '<tr>\n'
@@ -49,8 +49,9 @@ def adminlistdict(table, column, dict_value, dict_color, display_order, action, 
     output += '</select></td>\n'
     if table != '' and column != '':
         output += '<td><input type="text" name="dict_value"></td>\n'
-        output += '<td><input type="text" name="dict_color"></td>\n'
-        output += '<td><input type="text" name="display_order"i value="10"></td>\n'
+        output += '<td><input type="text" name="cell_color"></td>\n'
+        output += '<td><input type="text" name="font_color" value="#000000"></td>\n'
+        output += '<td><input type="text" name="display_order" value="10"></td>\n'
         output += '<td><button type="submit" name="create_dict" value=""><img src="/static/create.png" alt="Create" width="20"></button></td>'
     else:
         output += '<td></td>\n<td></td>\n<td></td>\n<td></td>\n'
@@ -61,11 +62,17 @@ def adminlistdict(table, column, dict_value, dict_color, display_order, action, 
         output += '<tr>'
         output += '<td>' + str(i[1]['sys_table']) + '</td>'
         output += '<td>' + str(i[1]['sys_table_column']) + '</td>'
+        style = ''
+        if str(i[1]['cell_color']) != '':
+            style += 'background:' + str(i[1]['cell_color']) + ';'
+        if str(i[1]['font_color']) != '':
+            style += 'color:' + str(i[1]['font_color']) + ';'
         if str(i[1]['dict_value']) == '-- None --':
-            output += '<td style="background:#' + str(i[1]['color']) + ';">' + str(i[1]['dict_value']) + '</td>'
+            output += '<td style="' + str(style) + '">' + str(i[1]['dict_value']) + '</td>'
         else:
-            output += '<td style="background:#' + str(i[1]['color']) + ';"><input type="text" name="' + str(i[1]['uuid']) + '::dict_value" value="' + str(i[1]['dict_value']) + '"></td>'
-        output += '<td style="background:#' + str(i[1]['color']) + ';"><input type="text" name="' + str(i[1]['uuid']) + '::dict_color" value="' + str(i[1]['color']) + '"></td>'
+            output += '<td style="' + str(style) + '"><input style="' + str(style) + '" type="text" name="' + str(i[1]['uuid']) + '::dict_value" value="' + str(i[1]['dict_value']) + '"></td>'
+        output += '<td><input type="text" name="' + str(i[1]['uuid']) + '::cell_color" value="' + str(i[1]['cell_color']) + '"></td>'
+        output += '<td><input type="text" name="' + str(i[1]['uuid']) + '::font_color" value="' + str(i[1]['font_color']) + '"></td>'
         output += '<td><input type="text" name="' + str(i[1]['uuid']) + '::display_order" value="' + str(i[1]['sys_order']) + '"></td>'
         output += '<td><button type="submit" name="update_dict" value="' + str(i[1]['uuid']) + '"><img src="/static/update.png" alt="Update" width="20"></button></td>'
         output += '</tr>\n'
@@ -78,10 +85,8 @@ def adminlistdict(table, column, dict_value, dict_color, display_order, action, 
 
 def get_dictionaries():
     query = """
-SELECT uuid, sys_table, sys_table_column, dict_value, sys_order, color
+SELECT uuid, sys_table, sys_table_column, dict_value, sys_order, cell_color, font_color
 FROM _sys_dictionary
--- WHERE sys_table = 'product'
---   AND sys_table_column = 'condition'
 ORDER BY sys_table, sys_table_column, sys_order, dict_value
 ;
     """
@@ -90,10 +95,10 @@ ORDER BY sys_table, sys_table_column, sys_order, dict_value
     cmdb_disconnect(conn)
     return df
 
-def add_dict_entry(table, column, dict_value, dict_color, display_order):
+def add_dict_entry(table, column, dict_value, cell_color, font_color, display_order):
     query = """
-INSERT INTO _sys_dictionary (sys_table, sys_table_column, dict_value, color, sys_order)
-VALUES ('""" + str(table) + """', '""" + str(column) + """', '""" + str(dict_value) + """', '""" + str(dict_color) + """', """ + str(display_order) + """);
+INSERT INTO _sys_dictionary (sys_table, sys_table_column, dict_value, cell_color, font_color, sys_order)
+VALUES ('""" + str(table) + """', '""" + str(column) + """', '""" + str(dict_value) + """', '""" + str(cell_color) + """', '""" + str(font_color) + """', """ + str(display_order) + """);
     """
     conn = cmdb_connect()
     conn.execute(text(query))
@@ -101,10 +106,10 @@ VALUES ('""" + str(table) + """', '""" + str(column) + """', '""" + str(dict_val
     cmdb_disconnect(conn)
     return query
 
-def up_dict_entry(table, column, dict_value, dict_color, display_order, uuid):
+def up_dict_entry(table, column, dict_value, cell_color, font_color, display_order, uuid):
     query = """
 UPDATE _sys_dictionary 
-SET dict_value = '""" + str(dict_value) + """', sys_order = """ + str(display_order) + """, color = '""" + str(dict_color) + """' 
+SET dict_value = '""" + str(dict_value) + """', sys_order = """ + str(display_order) + """, cell_color = '""" + str(cell_color) + """', font_color = '""" + str(font_color) + """' 
 WHERE uuid = '""" + str(uuid) + """';
     """
     conn = cmdb_connect()

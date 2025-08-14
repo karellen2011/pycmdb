@@ -79,15 +79,21 @@ def cmdbview(table, uuid, data):
             output += '</select></td>\n'
         elif data_type == 'dictionary':
             df_sel = df_dict[df_dict['sys_table_column'] == str(col)]
-            dict_color = df_sel[df_sel['uuid'] == str(df[col].iloc[0])]['color'].iloc[0]
+            style = ''
+            cell_color = df_sel[df_sel['uuid'] == str(df[col].iloc[0])]['cell_color'].iloc[0]
+            font_color = df_sel[df_sel['uuid'] == str(df[col].iloc[0])]['font_color'].iloc[0]
+            if cell_color != '':
+                style += 'background:' + str(cell_color) + ';'
+            if font_color != '':
+                style += 'color:' + str(font_color) + ';'
             #dict_value = df_sel[df_sel['uuid'] == str(df[col].iloc[0])]['dict_value'].iloc[0]
             #df_sel.to_csv('df_sel.csv', index=False)
-            output += '<td style="background:#' + str(dict_color) + ';">\n'
+            output += '<td style="' + str(style) + '">\n'
             #output += str(df[col].iloc[0]) + '<br>\n'
-            #output += str(dict_color) + '<br>\n'
+            #output += str(cell_color) + '<br>\n'
             #output += str(dict_value) + '<br>\n'
             #output += str(col) + '<br>\n'
-            output += '<select name="' + str(col) + '">\n'
+            output += '<select style="' + str(style) + '" name="' + str(col) + '">\n'
             for sl in df_sel.iterrows():
                 if sl[1]['uuid'] == str(df[col].iloc[0]):
                     output += '<option value="' + sl[1]['uuid'] + '" selected>' + sl[1]['dict_value'] + '</option>\n'
@@ -107,18 +113,15 @@ def cmdbview(table, uuid, data):
                     col_count += 1
             col_count = 1
             output += '</tr>\n'
-            output += '<tr><td colspan="' + str(colspan) + '">' + str(col_dv) + '</td></tr>\n'
             output += '<tr><td colspan="' + str(colspan) + '">'
             output += '<div class="tab">\n'
-            output += '<button class="tablinks" onclick="openTab(event, \'View\')" id="defaultOpen">View</button>\n'
+            output += '<button class="tablinks" onclick="openTab(event, \'' + str(col_dv) + '\')" id="defaultOpen">' + str(col_dv) + '</button>\n'
             output += '<button class="tablinks" onclick="openTab(event, \'Edit\')">Edit</button>\n'
             output += '</div>\n'
-            output += '<div id="View" class="tabcontent">\n'
+            output += '<div id="' + str(col_dv) + '" class="tabcontent">\n'
             output += '<p>' + str(df[col].iloc[0]) + '</p>\n'
             output += '</div>\n'
             output += '<div id="Edit" class="tabcontent">\n'
-            #output += '<p id="debug">' + str(df[col].iloc[0]) + '</p>\n'
-            #output += '<input type="text" name="' + str(col) + '" value="' + str(df[col].iloc[0]) + '">\n'
             output += '<textarea name="' + str(col) + '">' + str(df[col].iloc[0]) + '</textarea>\n'
             output += '</div>\n'
             output += '<script>\n'
@@ -131,8 +134,6 @@ def cmdbview(table, uuid, data):
             output += '</td>'
         else:
             output += '<td>' + str(df[col].iloc[0]) + '</td>'
-        #if cc > 0 and cc % display_columns != 0:
-        #    output += '</tr><tr>\n'
         col_count += 1
         if col_count == display_columns:
             col_count = 0
@@ -144,7 +145,7 @@ def cmdbview(table, uuid, data):
     output += '\n</tr>\n'
     output += '</table>\n'
     #output += str(col_count) + '<br>\n'
-    
+
     # DISPLAY REFERENCES
     df_dv = get_display_value(table)
     df_dv = df_dv[df_dv['data_type'] == 'reference']
@@ -176,7 +177,7 @@ def cmdbview(table, uuid, data):
                                 output += '<option value="' + ref_ref[1]['uuid'] + '" selected>' + ref_ref[1]['name'] + '</option>\n'
                             else:
                                 output += '<option value="' + ref_ref[1]['uuid'] + '">' + ref_ref[1]['name'] + '</option>\n'
-                        output += '<select> <a href="/view/' + str(col) + '/' + str(df_ref['uuid'].iloc[0]) + '/">\n'
+                        output += '</select> <a href="/view/' + str(col) + '/' + str(df_ref['uuid'].iloc[0]) + '/">\n'
                         #output += '<br>\n'
                         #output += '<a href="/view/' + str(col) + '/' + str(df_ref['uuid'].iloc[0]) + '/">' + str(df_ref[col_ref].iloc[0]) + '</a><br>'
                         output += '</td>'
@@ -185,12 +186,18 @@ def cmdbview(table, uuid, data):
                         output += '<td>' + str(df_ref[col_ref].iloc[0]) + '</td>'
                 elif data_type_ref == 'dictionary':
                     #df_sel = df_dict[df_dict['sys_table_column'] == str(col)]
-                    #dict_color = df_sel[df_sel['uuid'] == str(df[col].iloc[0])]['color'].iloc[0]
+                    #cell_color = df_sel[df_sel['uuid'] == str(df[col].iloc[0])]['color'].iloc[0]
                     dict_value_ref = df_dict_ref[df_dict_ref['uuid'] == df_ref[col_ref].iloc[0]]['dict_value'].iloc[0]
-                    dict_color_ref = df_dict_ref[df_dict_ref['uuid'] == df_ref[col_ref].iloc[0]]['color'].iloc[0]
+                    cell_color_ref = df_dict_ref[df_dict_ref['uuid'] == df_ref[col_ref].iloc[0]]['cell_color'].iloc[0]
+                    font_color_ref = df_dict_ref[df_dict_ref['uuid'] == df_ref[col_ref].iloc[0]]['font_color'].iloc[0]
                     #output += '<td>' + str(col_dv_ref) + ' ' + str(col_dv) + '</td>'
+                    style = ''
+                    if cell_color_ref != '':
+                        style += 'background:' + str(cell_color_ref) + ';'
+                    if font_color_ref != '':
+                        style += 'color:' + str(font_color_ref) + ';'
                     output += '<td>' + str(col_dv_ref) + '</td>'
-                    output += '<td style="background:#' + str(dict_color_ref) + ';">' + str(dict_value_ref) + '</td>'
+                    output += '<td style="' + str(style) + '">' + str(dict_value_ref) + '</td>'
                 elif data_type_ref == 'reference':
                     df_rs = get_ref_table_single(col_ref, df_ref[col_ref].iloc[0])
                     #output += '<td>' + str(col_ref) + '  ' + str(col_dv_ref) + '</td>'
@@ -300,7 +307,7 @@ ORDER BY sys_order, display_value
 
 def get_dict(table):
     query = """
-SELECT uuid, sys_table_column, dict_value, color
+SELECT uuid, sys_table_column, dict_value, cell_color, font_color
 FROM _sys_dictionary
 WHERE sys_table = '""" + str(table) + """'
 ORDER BY sys_table_column, sys_order, dict_value

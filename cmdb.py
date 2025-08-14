@@ -12,6 +12,7 @@ from adminfunction import adminlistfunctions
 from adminreport import createreport
 from tablelist import tablelist
 from cmdbview import cmdbview
+from cmdbview2 import cmdbview2
 
 app = Flask(__name__)
 
@@ -99,7 +100,8 @@ def admindict():
     table = ''
     column = ''
     dict_value = ''
-    dict_color = ''
+    cell_color = ''
+    font_color = ''
     display_order = ''
     action = ''
     uuid = ''
@@ -108,7 +110,8 @@ def admindict():
         if 'create_dict' in im_dict.keys():
             action = 'create'
             dict_value = str(im_dict['dict_value'])
-            dict_color = str(im_dict['dict_color'])
+            cell_color = str(im_dict['cell_color'])
+            font_color = str(im_dict['font_color'])
             display_order = str(im_dict['display_order']).lower()
         if 'update_dict' in im_dict.keys():
             action = 'update'
@@ -117,13 +120,14 @@ def admindict():
                 dict_value = im_dict[uuid + '::dict_value']
             else:
                 dict_value = '-- None --'
-            dict_color = im_dict[uuid + '::dict_color']
+            cell_color = im_dict[uuid + '::cell_color']
+            font_color = im_dict[uuid + '::font_color']
             display_order = im_dict[uuid + '::display_order']
         if 'table' in im_dict.keys():
             table = str(im_dict['table']).lower()
         if 'column' in im_dict.keys():
             column = str(im_dict['column']).lower()
-    output = adminlistdict(table, column, dict_value, dict_color, display_order, action, uuid)
+    output = adminlistdict(table, column, dict_value, cell_color, font_color, display_order, action, uuid)
     #output += str(action) + ' ' + str(uuid) + '<br>\n'
     #output += str(table) + ' :: ' + str(column) + ' :: ' + str(dict_value) + ' :: ' + str(dict_color) + ' :: ' + str(display_order) + ' :: ' + '<br>\n'
     return output
@@ -228,9 +232,14 @@ def view(table_name, uuid):
     #output += str(data) + '<br>\n'
     return output
 
-
-
-
-
-
+@app.route("/view2/<string:table_name>/<string:uuid>/", methods = ['POST', 'GET'])
+def view2(table_name, uuid):
+    data = {}
+    if request.method == 'POST':
+        im_dict = request.form
+        for key in im_dict.keys():
+            data[key] = im_dict[key]
+    output = cmdbview2(table_name, uuid, data)
+    #output += str(data) + '<br>\n'
+    return output
 

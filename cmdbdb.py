@@ -156,7 +156,7 @@ ORDER BY sys_order, display_value
 
 def get_dictionary(table):
     query = """
-SELECT uuid, sys_table_column, dict_value, color
+SELECT uuid, sys_table_column, dict_value, cell_color, font_color
 FROM _sys_dictionary
 WHERE sys_table = '""" + str(table) + """'
 ORDER BY sys_table_column, sys_order, dict_value
@@ -223,7 +223,7 @@ ORDER BY sys_order
     cmdb_disconnect(conn)
     return df
 
-def get_table(table):
+def get_table(table, target=None, uuid=None):
     df_display_value = get_display_value(table)
     df_dictionary = get_dictionary(table)
     cte_query = ''
@@ -241,12 +241,13 @@ def get_table(table):
                     cte_query = 'WITH cte_dict_' + col[1]['sys_table'] + '_' + col[1]['sys_table_column'] + ' AS (\n'
                 else:
                     cte_query += ', cte_dict_' + col[1]['sys_table'] + '_' + col[1]['sys_table_column'] + ' AS (\n'
-                cte_query += 'SELECT uuid, dict_value, color\n'
+                cte_query += 'SELECT uuid, dict_value, cell_color, font_color\n'
                 cte_query += 'FROM _sys_dictionary\n'
                 cte_query += 'WHERE sys_table = \'' + col[1]['sys_table'] + '\' AND sys_table_column = \'' + col[1]['sys_table_column'] + '\'\n'
                 cte_query += ')\n'
                 select_query += 'cte_dict_' + col[1]['sys_table'] + '_' + col[1]['sys_table_column'] + '.dict_value AS ' + col[1]['sys_table_column'] + '_display_value, \n'
-                select_query += 'cte_dict_' + col[1]['sys_table'] + '_' + col[1]['sys_table_column'] + '.color AS ' + col[1]['sys_table_column'] + '_display_color, \n'
+                select_query += 'cte_dict_' + col[1]['sys_table'] + '_' + col[1]['sys_table_column'] + '.cell_color AS ' + col[1]['sys_table_column'] + '_cell_color, \n'
+                select_query += 'cte_dict_' + col[1]['sys_table'] + '_' + col[1]['sys_table_column'] + '.font_color AS ' + col[1]['sys_table_column'] + '_font_color, \n'
                 dictionary_join += 'JOIN cte_dict_' + col[1]['sys_table'] + '_' + col[1]['sys_table_column'] + ' ON ' + col[1]['sys_table'] + '.' + col[1]['sys_table_column'] + ' = cte_dict_' + col[1]['sys_table'] + '_' + col[1]['sys_table_column'] + '.uuid\n'
             if col[1]['dictionary'] == False and col[1]['reference'] == True and col[1]['function'] == False:
                 select_query += col[1]['sys_table_column'] + '.uuid AS ' + col[1]['sys_table_column'] + '_uuid, \n'
@@ -277,6 +278,10 @@ def get_table(table):
     query += from_query
     query += reference_join
     query += dictionary_join
+    if target == None and uuid != None:
+        query += "WHERE " + str(table) + ".uuid = '" + str(uuid) + "'\n"
+    if target != None and uuid != None:
+        query += "WHERE " + str(target) + ".uuid = '" + str(uuid) + "'\n"
     query += 'ORDER BY name'
     #print(query)
     conn = cmdb_connect()

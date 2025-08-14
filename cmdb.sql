@@ -62,7 +62,9 @@ CREATE TABLE public._sys_dictionary (
     sys_table_column character varying(256),
     dict_value character varying(256),
     sys_order integer,
-    color character varying(8) DEFAULT ''::character varying
+    color character varying(8) DEFAULT ''::character varying,
+    cell_color character varying(32) DEFAULT ''::character varying,
+    font_color character varying(32) DEFAULT '#000000'::character varying
 );
 
 
@@ -350,51 +352,53 @@ ALTER TABLE public.test OWNER TO cmdb;
 -- Data for Name: _sys_dictionary; Type: TABLE DATA; Schema: public; Owner: cmdb
 --
 
-COPY public._sys_dictionary (uuid, sys_table, sys_table_column, dict_value, sys_order, color) FROM stdin;
-227eb27d167241c4bd643416abfd4ab4	hardware_asset	hw_lifecycle	In Stock	30	FCE83A
-14f13d39c51541a89b0a13b53f29472c	hardware_asset	hw_lifecycle	Pending Retirement	40	FF3838
-4fe586e7048349ce99454077633905a2	hardware_asset	hw_lifecycle	Disposed	60	56F000
-cbda7508f1d94cd0925ba72cb28da6ea	network_interfaces	ip_type	Static	20	
-a8af2f0e3a054940b7abb06a72247767	software	software_type	-- None --	10	
-e9dd9386ce8d4efca74255651ab32f00	software	software_type	User Software	10	
-cb3a85c24b6d40f8bf46e5611c8da42f	company	country	-- None --	10	
-b995f1b2d377462cb7176831a915f70a	company	country	South Korea	10	
-037a2e983c024ce090f673a0590b943c	software	sw_lifecycle	Obsolete	10	FF3838
-2db9e4c07c3242f58a7b842a7191ecba	software	sw_lifecycle	-- None --	100	
-0ba059d7369c4a8783a7f23e11139773	hardware	cpu_type	x86_32	10	
-8b27b64193c14febb913ad8682557639	hardware	cpu_type	arm32	10	
-806573b9e40b4966a37c15407dcd0302	hardware	cpu_type	sparc	10	
-62f410217a8343bdad336819aa25adb5	company	country	Japan	10	
-0be2235637f14e4f8a8b506d6b5df007	hardware	product_lifecycle	-- None --	10	
-7328ff123f6e402e8985bb596967828b	hardware	product_lifecycle	Obsolete	30	FF3838
-ea9e5224b47945f995df7b89add84d4e	hardware_asset	hw_lifecycle	Available	20	FCE83A
-e62617b8d9fb4b849b39ed5b0bd79d63	company	country	Germany	10	
-fc85e867554c48cba18f977c2b058271	company	country	United States of America	10	
-84fbc39baefa4df2b1e0debc1426e8df	software	sw_lifecycle	Available	10	56F000
-e2354cad85f34870b57a90a1f572dd84	hardware	cpu_type	-- None --	10	
-abfdadab6dcf48288c0737bcce370f50	hardware	cpu_type	x86_64	10	
-cfd2bcd4df4447c5a8db323f827ba215	hardware	cpu_type	arm64	10	
-a886340306b543a883df8f9a3bdf9100	network_interfaces	ip_type	-- None --	10	
-a4c7242fdd4c4e2881c997cf17a763c4	hardware	cpu_type	sh4	10	
-99c34331ea1944bb8ca5816d6962a862	hardware	product_lifecycle	Available	20	56F000
-15054e5d5bdc4ed7b1d252618e9414a2	hardware_asset	hw_lifecycle	-- None --	5	
-6386ab37d91b4d45963d646431d0b6eb	hardware_asset	hw_lifecycle	On Order	10	FCE83A
-0f040eee0f0d4c9faa6abd0ff9ae956f	hardware_asset	hw_lifecycle	In Use	35	FF3838
-c359893877f34d82b7f64ef151a7026b	hardware_asset	hw_lifecycle	Pending Disposal	50	56F000
-3f6eea09accb4406bb88d98d11010217	network_interfaces	ip_type	Dynamic	30	
-06dd2581e04f497a8fed02f791eede70	network_interfaces	ip_type	Slave	40	
-205399429d1f43edb37a761cb4102317	software	software_type	Operating System	10	
-6e7ed0a3a1ba462ca5f0b0b15b4a8bae	software	software_type	Server Software	10	
-138930daac194a3094077481a60f59e1	service_asset	environment	-- None --	10	
-f9e24cc3d5f54d2aa7635140a8f40d60	service_asset	environment	Production	10	
-eb6a50d707e44681af665acca3615c25	service_asset	environment	Test	10	
-34b5869c3107434ba02ca5271722f4fb	service_asset	environment	Development	10	
-2d42948af8064b1d884d149024d1f591	network_interfaces	connector	-- None --	10	
-addcb50381a84859ba4acc90c95fa1b0	network_interfaces	connector	Built-In	20	
-7ca4127158534d97a0ba4e930cd4367c	network_interfaces	connector	USB	20	
-ad71d6aecdaf4b3a8c04ed1136f592f4	test	test_lc	-- None --	10	
-3f9d607dab794340b1477cae4d111384	test	test_lc	Active	10	FF3838
-b83656c33ea44205bc6d94a66e034f25	test	test_lc	Inactive	10	A4ABB6
+COPY public._sys_dictionary (uuid, sys_table, sys_table_column, dict_value, sys_order, color, cell_color, font_color) FROM stdin;
+ea9e5224b47945f995df7b89add84d4e	hardware_asset	hw_lifecycle	Available	20	FCE83A	#ffffe0	#8b8000
+227eb27d167241c4bd643416abfd4ab4	hardware_asset	hw_lifecycle	In Stock	30	FCE83A	#ffffe0	#8b8000
+9d177457d1074d028646506e4d6b9fcb	company	country	Denmark	10			#000000
+cbda7508f1d94cd0925ba72cb28da6ea	network_interfaces	ip_type	Static	20			#000000
+a8af2f0e3a054940b7abb06a72247767	software	software_type	-- None --	10			#000000
+e9dd9386ce8d4efca74255651ab32f00	software	software_type	User Software	10			#000000
+cb3a85c24b6d40f8bf46e5611c8da42f	company	country	-- None --	10			#000000
+b995f1b2d377462cb7176831a915f70a	company	country	South Korea	10			#000000
+2db9e4c07c3242f58a7b842a7191ecba	software	sw_lifecycle	-- None --	100			#000000
+0ba059d7369c4a8783a7f23e11139773	hardware	cpu_type	x86_32	10			#000000
+8b27b64193c14febb913ad8682557639	hardware	cpu_type	arm32	10			#000000
+806573b9e40b4966a37c15407dcd0302	hardware	cpu_type	sparc	10			#000000
+62f410217a8343bdad336819aa25adb5	company	country	Japan	10			#000000
+0be2235637f14e4f8a8b506d6b5df007	hardware	product_lifecycle	-- None --	10			#000000
+e62617b8d9fb4b849b39ed5b0bd79d63	company	country	Germany	10			#000000
+fc85e867554c48cba18f977c2b058271	company	country	United States of America	10			#000000
+e2354cad85f34870b57a90a1f572dd84	hardware	cpu_type	-- None --	10			#000000
+abfdadab6dcf48288c0737bcce370f50	hardware	cpu_type	x86_64	10			#000000
+cfd2bcd4df4447c5a8db323f827ba215	hardware	cpu_type	arm64	10			#000000
+a886340306b543a883df8f9a3bdf9100	network_interfaces	ip_type	-- None --	10			#000000
+a4c7242fdd4c4e2881c997cf17a763c4	hardware	cpu_type	sh4	10			#000000
+15054e5d5bdc4ed7b1d252618e9414a2	hardware_asset	hw_lifecycle	-- None --	5			#000000
+14f13d39c51541a89b0a13b53f29472c	hardware_asset	hw_lifecycle	Pending Retirement	40	FF3838	#ffcccb	#8b0000
+037a2e983c024ce090f673a0590b943c	software	sw_lifecycle	Obsolete	10	FF3838	#ffcccb	#8b0000
+7328ff123f6e402e8985bb596967828b	hardware	product_lifecycle	Obsolete	30	FF3838	#ffcccb	#8b0000
+4fe586e7048349ce99454077633905a2	hardware_asset	hw_lifecycle	Disposed	60	56F000	#90ee90	#006400
+84fbc39baefa4df2b1e0debc1426e8df	software	sw_lifecycle	Available	10	56F000	#90ee90	#006400
+99c34331ea1944bb8ca5816d6962a862	hardware	product_lifecycle	Available	20	56F000	#90ee90	#006400
+3f6eea09accb4406bb88d98d11010217	network_interfaces	ip_type	Dynamic	30			#000000
+06dd2581e04f497a8fed02f791eede70	network_interfaces	ip_type	Slave	40			#000000
+205399429d1f43edb37a761cb4102317	software	software_type	Operating System	10			#000000
+6e7ed0a3a1ba462ca5f0b0b15b4a8bae	software	software_type	Server Software	10			#000000
+138930daac194a3094077481a60f59e1	service_asset	environment	-- None --	10			#000000
+f9e24cc3d5f54d2aa7635140a8f40d60	service_asset	environment	Production	10			#000000
+eb6a50d707e44681af665acca3615c25	service_asset	environment	Test	10			#000000
+34b5869c3107434ba02ca5271722f4fb	service_asset	environment	Development	10			#000000
+2d42948af8064b1d884d149024d1f591	network_interfaces	connector	-- None --	10			#000000
+addcb50381a84859ba4acc90c95fa1b0	network_interfaces	connector	Built-In	20			#000000
+7ca4127158534d97a0ba4e930cd4367c	network_interfaces	connector	USB	20			#000000
+ad71d6aecdaf4b3a8c04ed1136f592f4	test	test_lc	-- None --	10			#000000
+6386ab37d91b4d45963d646431d0b6eb	hardware_asset	hw_lifecycle	On Order	10	FCE83A	#ffffe0	#8b8000
+04ebab372d034d95810c597d2d6be0f2	company	country	Norway	10			#000000
+3f9d607dab794340b1477cae4d111384	test	test_lc	Active	10	FF3838	#ffcccb	#8b0000
+b83656c33ea44205bc6d94a66e034f25	test	test_lc	Inactive	10	A4ABB6	lightblue	darkblue
+0f040eee0f0d4c9faa6abd0ff9ae956f	hardware_asset	hw_lifecycle	In Use	35	FF3838	#ffcccb	#8b0000
+c359893877f34d82b7f64ef151a7026b	hardware_asset	hw_lifecycle	Pending Disposal	50	56F000	#90ee90	#006400
 \.
 
 
@@ -517,9 +521,9 @@ c313d84b3f33496b9983945afc392362	Order Date	test	order_date	80	f	f
 b0f66d39b9d145a7bc06a78f2d6d7642	Description	test	description	90	f	t
 6b3d87eeeacf4ed396986d6bc6d389ee	Lifecycle	test	test_lc	25	f	f
 04f6a6fd2cd846ada69c2153f34dfca9	Process	test	processes	55	f	f
-4f6add824af746f5b0bdc0122870db7e	Article	knowledge	article	40	f	t
 3b68cede2f7d4f6a864af8720f24bb5a	Knowledge	processes	knowledge	80	f	f
-08c34fefde084ccea14736632bcb4a53	Approved	knowledge	approved	50	t	f
+4f6add824af746f5b0bdc0122870db7e	Article	knowledge	article	40	f	t
+08c34fefde084ccea14736632bcb4a53	Approved	knowledge	approved	35	t	f
 \.
 
 
@@ -854,7 +858,6 @@ b90ef492e56e481a8a424542f9ab91a7	unknown0	t		16.00	908295a7a92f48cb9c1489a56b611
 
 COPY public.hardware (uuid, name, active, cpu_type, company, product_lifecycle) FROM stdin;
 e4033e0c002643c1addf746f67880c09	-- None --	f	e2354cad85f34870b57a90a1f572dd84	a65c511a51054dac91641b3944f7bb5b	0be2235637f14e4f8a8b506d6b5df007
-9b3af2c29f104893a0b041f944fcdadd	386	t	0ba059d7369c4a8783a7f23e11139773	0692b72645ae49108b5f42b78a4fd3d3	7328ff123f6e402e8985bb596967828b
 adfc6355866d4e378d262c44993414fa	486	t	0ba059d7369c4a8783a7f23e11139773	0692b72645ae49108b5f42b78a4fd3d3	7328ff123f6e402e8985bb596967828b
 80aea40a14f746f28636f67f586acb3a	Cobalt RaQ 4	t	0ba059d7369c4a8783a7f23e11139773	5038c9c99f02493e8d60e98bbfe74050	7328ff123f6e402e8985bb596967828b
 aa8da40d10e644c08961150c17a3af48	Dreamcast	t	a4c7242fdd4c4e2881c997cf17a763c4	fa79f848e1bf44ddbe17ee0aa455bafd	7328ff123f6e402e8985bb596967828b
@@ -865,6 +868,7 @@ fc3b7735d4e24a2fa9255d1b791e1726	HP 255 G8	t	abfdadab6dcf48288c0737bcce370f50	77
 adefeba1ec4d4ff5b41b1c6431b187b6	Odroid XU4 (active)	t	8b27b64193c14febb913ad8682557639	17f96752206f412396b01598f02d4bff	7328ff123f6e402e8985bb596967828b
 f0741dd4c3b842bbb59e48059ef037d0	Odroid XU4 (passive)	t	8b27b64193c14febb913ad8682557639	17f96752206f412396b01598f02d4bff	7328ff123f6e402e8985bb596967828b
 b4a52773f6a34544931b8cab19aef656	V100	t	806573b9e40b4966a37c15407dcd0302	5038c9c99f02493e8d60e98bbfe74050	7328ff123f6e402e8985bb596967828b
+9b3af2c29f104893a0b041f944fcdadd	386	t	0ba059d7369c4a8783a7f23e11139773	0692b72645ae49108b5f42b78a4fd3d3	7328ff123f6e402e8985bb596967828b
 \.
 
 
@@ -880,11 +884,11 @@ d9f66e4917144ef380ce9f357b3b7558	mf01	t	5086271047454a4faeacbfc1da8f38cc	979b23a
 908295a7a92f48cb9c1489a56b6113aa	mc02	t	b298776a954d40f0949d18276ed543bd	979b23aaa89a40db958dd0ee37f44107	2cf9217661964a5fab6efad972d588f2	0f040eee0f0d4c9faa6abd0ff9ae956f	\N	4.000	2.000	1970-01-01
 6801c63c5310486fa256087d53069d88	mf02	t	f57d575fe9f64446b80cdecf296442e4	979b23aaa89a40db958dd0ee37f44107	747dc1b467054a0381861904629b5cac	6386ab37d91b4d45963d646431d0b6eb	\N	4.000	1.910	2025-08-17
 0ac354354a7d4b188220f3fa7e2ccd78	386	t	21146648320d49d7b008980ce03baff3	0692b72645ae49108b5f42b78a4fd3d3	9b3af2c29f104893a0b041f944fcdadd	c359893877f34d82b7f64ef151a7026b	\N	0.005	0.016	1995-07-01
-3084c653048f4fa3be14b08999564f2b	486	t	40442e085cf143ffbb0669210bea1fa6	0692b72645ae49108b5f42b78a4fd3d3	adfc6355866d4e378d262c44993414fa	c359893877f34d82b7f64ef151a7026b	\N	0.128	0.100	1997-01-01
 d6da568c1c2b4fa59f0bf3198b8fd43a	sun01	t	4510ebf9933d4fa3908c812bcfb68c80	6352de0f8761490981e72967e3ff1430	b4a52773f6a34544931b8cab19aef656	227eb27d167241c4bd643416abfd4ab4	\N	2.000	0.650	2010-03-01
 cbd2db34fed44c82a53336291a5a0e50	web01	t	49afea1c3a3748e6b90dcb00d3e8e78d	6352de0f8761490981e72967e3ff1430	80aea40a14f746f28636f67f586acb3a	227eb27d167241c4bd643416abfd4ab4	\N	0.512	0.450	2010-03-01
 9b433770644c4f52bbecd4eb09dc5153	py02	t	b608e43fb43149a295a917a80866b284	979b23aaa89a40db958dd0ee37f44107	9d256126d24f402fafb82cf100aca80e	0f040eee0f0d4c9faa6abd0ff9ae956f	\N	8.000	1.990	2022-12-01
 4f6f8e5a04ba4c66a46fe810dc1e8913	dc01	t	ddb42da316ac461fb0b964eb1a3fc083	a65c511a51054dac91641b3944f7bb5b	aa8da40d10e644c08961150c17a3af48	0f040eee0f0d4c9faa6abd0ff9ae956f	\N	0.016	0.200	1970-01-01
+3084c653048f4fa3be14b08999564f2b	486	t	40442e085cf143ffbb0669210bea1fa6	0692b72645ae49108b5f42b78a4fd3d3	adfc6355866d4e378d262c44993414fa	c359893877f34d82b7f64ef151a7026b	\N	0.128	0.100	1998-01-01
 \.
 
 
@@ -893,10 +897,10 @@ cbd2db34fed44c82a53336291a5a0e50	web01	t	49afea1c3a3748e6b90dcb00d3e8e78d	6352de
 --
 
 COPY public.knowledge (uuid, name, active, article, approved) FROM stdin;
-10f2cfaab5cb4967adb602b9c0f8e53e	-- None --	t	Please enter some knowledge...	f
+10f2cfaab5cb4967adb602b9c0f8e53e	-- None --	f	Please enter some knowledge...	f
+b13e0e9513ad4ef6bddf4461a51d1e7b	DINROS	t	<h3>DINROS</h3>\r\n<ul>\r\n<li><b>D</b>iscover</li>\r\n<li><b>I</b>nventorize</li>\r\n<li><b>N</b>ormalize</li>\r\n<li><b>R</b>econcile</li>\r\n<li><b>O</b>ptimize</li>\r\n<li><b>S</b>hare</li>\r\n</ul>	f
 95d0d19f69d049d0bda815c29fee92ac	IT Procurement	t	<b>Procurement</b> is the process of locating and agreeing to terms and purchasing goods, services, or other works from an external source, often with the use of a tendering or competitive bidding process.<br>\r\n<br>\r\nSource: https://en.wikipedia.org/wiki/Procurement	f
 f14b1cfd50b1412cb7c680ef907a4130	IMAC	t	<ul>\r\n<li><b>I</b>nstall</li>\r\n<li><b>M</b>ove</li>\r\n<li><b>A</b>dd</li>\r\n<li><b>C</b>hange</li>\r\n</ul>	f
-b13e0e9513ad4ef6bddf4461a51d1e7b	DINROS	t	<ul>\r\n<li><b>D</b>iscover</li>\r\n<li><b>I</b>nventory</li>\r\n<li><b>N</b>ormalize</li>\r\n<li><b>R</b>econcile</li>\r\n<li><b>O</b>ptimize</li>\r\n<li><b>S</b>hare</li>\r\n</ul>	f
 7290d1ee24404e68b41a9a544c7b0cb3	ITAD	t	IT Asset Disposition (ITAD) is the process of securely and responsibly <b>handling IT equipment that has reached the end of its lifecycle</b>.<br>\r\n<br>\r\nSource: https://invgate.com/itsm/it-asset-management/it-asset-disposition	f
 d60d718d1c05459a990e5732db559ada	Knowledge Management	t	<b>Knowledge management (KM)</b> is the set of procedures for producing, disseminating, utilizing, and overseeing an organization's knowledge and data.<br>\r\n<br>\r\nSource: <a href="https://en.wikipedia.org/wiki/Knowledge_management">https://en.wikipedia.org/wiki/Knowledge_management</a>	t
 \.

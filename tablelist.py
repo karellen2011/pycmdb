@@ -346,10 +346,12 @@ def tablelist(table, row_start, number_rows, filter_col, filter_con, filter_val,
                     #output += '</td>'
                 # OUTPUT DICTIONARY
                 if internal_data_type == 'dictionary':
-                    if str(row[1][column + '_display_color']) != '':
-                        output += '<td style="background:#' + str(row[1][column + '_display_color']) + ';">' + str(row[1][column + '_display_value']) + '</td>'
-                    else:
-                        output += '<td>' + str(row[1][column + '_display_value']) + '</td>'
+                    style = ''
+                    if str(row[1][column + '_cell_color']) != '':
+                        style += 'background:' + str(row[1][column + '_cell_color']) + ';'
+                    if str(row[1][column + '_font_color']) != '':
+                        style += 'color:' + str(row[1][column + '_font_color']) + ';'
+                    output += '<td style="' + str(style) + '">' + str(row[1][column + '_display_value']) + '</td>'
                 # OUTPUT REFERENCE
                 if internal_data_type == 'reference':
                     output += '<td>'

@@ -65,11 +65,11 @@ http://localhost:5003/
 
 ## USING pycmdb ##
 
-Admin -> Table
+### Admin -> Table ###
 
-Table: the name of the table inside the database
-Display Value: the display value of the table as it should appear
-Order: defines the display order
+* Table: the name of the table inside the database
+* Display Value: the display value of the table as it should appear
+* Order: defines the display order
 
 ### Admin -> Column ###
 
@@ -80,34 +80,42 @@ Order: defines the display order
 
 ### Admin -> Column -> Data Type ###
 
+#### Reference ####
 * Reference: references another table, the column name must be the table name!
 * Length: keep empty
 * Default keep empty
 
+#### Dictionary ####
 * Dictionary: will create a new dictionary with a default value
 * Length: keep empty
 * Default keep empty
 
+#### Function ####
 * Function: will load an additional function, the column name must be the function name
 * Length: keep empty
 * Default keep empty
 
+#### Boolean ####
 * Boolean: true/false
 * Length: keep empty
 * Default true/false
 
+#### Integer ####
 * Integer: just an integer
 * Length: keep empty
 * Default any integer number you enter
 
+#### Float ####
 * Float: floating point number
 * Length: defines precision and scale, e.g. 6,3 will allow to enter numbers like 999.999
 * Default: any floating point number you enter
 
+#### Character Varying ####
 * Character Varying: a string
 * Length: the number of characters for the string, default 256
 * Default: any string you enter
 
+#### Date ####
 * Date: date only, not date & Time, format: YYYY-MM-DD
 * Length: keep empty
 * Default: any date you enter

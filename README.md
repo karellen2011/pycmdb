@@ -2,18 +2,18 @@
 
 Install the following python modules
 
-sqlalchemy
-psycopg2
-pandas
-numpy
-importlib.util
-sys
-os
-seaborn
-matplotlib.pyplot
-segno
-python-barcode
-Flask
+* sqlalchemy
+* psycopg2
+* pandas
+* numpy
+* importlib.util
+* sys
+* os
+* seaborn
+* matplotlib.pyplot
+* segno
+* python-barcode
+* Flask
 
 ## DATABASE ##
 

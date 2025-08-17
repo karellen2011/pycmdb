@@ -17,6 +17,8 @@ Install the following python modules
 
 ## DATABASE ##
 
+*Note: * Postgres on Linux only!
+
 Step 1: Create Database and User
 
 create database cmdb3;
